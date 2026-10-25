@@ -45,6 +45,11 @@ http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === '/editor' || req.url.startsWith('/editor?')) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return fs.createReadStream(path.join(__dirname, 'editor.html')).pipe(res);
+  }
+
   if (req.url === '/' || req.url.startsWith('/?')) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return fs.createReadStream(path.join(__dirname, 'overlay.html')).pipe(res);
@@ -54,6 +59,7 @@ http.createServer((req, res) => {
   res.end();
 }).listen(PORT, '127.0.0.1', () => {
   console.log(`YT Music overlay running: add http://127.0.0.1:${PORT}/ as an OBS Browser Source`);
+  console.log(`Customize it in the editor: http://127.0.0.1:${PORT}/editor`);
 });
 
 // Keep SSE connections alive through idle periods.

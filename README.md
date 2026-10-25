@@ -20,10 +20,26 @@ The userscript reads the track info and taps the player's audio with the Web Aud
 4. **Add it to OBS**: Sources → + → Browser. URL `http://127.0.0.1:8974/`, width `620`, height `200`. Clear the default "Custom CSS".
 5. Open (or reload) music.youtube.com, play something and **click anywhere on the page once**. That click lets the script start the real-audio equalizer (browsers require a user gesture before Web Audio can run). Until then the bars use a simulated animation.
 
+## Editor
+
+With the server running, open **http://127.0.0.1:8974/editor**. Pick a theme, colors, font, label, size and more with a live preview (demo songs, or your own music when the userscript is active), then press **Copy URL** and paste it into the OBS Browser Source. The editor also shows the source size to use. Settings are remembered in your browser.
+
 ## Options (add to the OBS URL)
 
 | Option | Example | Effect |
 |---|---|---|
+| `theme` | `?theme=vinyl` | `classic` (default), `glass` (Apple-style liquid glass tinted by the cover), `vinyl` (a spinning record with the cover as its center label), `retro` (hi-fi LCD with LED level meters), or game styles `lol`, `cs` (CS2 HUD), `faceit` (same layout as the FaceitWatcher overlay) and `truedamage` (inspired by the League Superstar music screen) |
+| `compact` | `?compact=1` | One-line pill in any theme; progress shows as a ring around the cover |
+| `width` | `?compact=1&width=380` | Fixed width of the compact pill in px (default 460); long names scroll inside |
+| `scale` | `?scale=1.5` | Overall size (0.3 to 3). Multiply the OBS source size by the same factor |
+| `accent2` | `?accent=ff3d6e&accent2=ffb000` | Second color for gradients, used with `accent` |
+| `text` | `?text=ffffff` | Title color |
+| `bg`, `bgAlpha` | `?bg=101218&bgAlpha=0.6` | Card color and opacity (0 to 1) |
+| `radius` | `?radius=4` | Card corner radius in px |
+| `font` | `?font=Poppins` | Any Google Fonts family |
+| `label`, `showLabel` | `?label=On+air` | Text instead of "Now Playing"; `showLabel=0` hides it |
+| `album`, `cover`, `eq` | `?album=0` | Set to `0` to hide the album name, the cover or the equalizer |
+| `demo` | `?demo=1` | Demo songs instead of live data, for testing |
 | `bars` | `?bars=24` | Number of equalizer bars (default 32) |
 | `accent` | `?accent=00e5ff` | Fixed color instead of one picked from the cover |
 | `hidePaused` | `?hidePaused=1` | Fade the overlay out while paused |

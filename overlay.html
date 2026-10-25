@@ -10,6 +10,12 @@
     --text: #fff;
     --muted: rgba(255,255,255,.7);
     --card: rgba(14,14,18,.72);
+    --bar1: var(--accent);
+    --bar2: var(--accent2);
+    --cap: rgba(255,255,255,.85);
+    --bar-round: 3;
+    --bar-glow: 0;
+    --bar-seg: 0;
   }
   html, body { margin: 0; background: transparent; overflow: hidden; }
   body {
@@ -88,15 +94,389 @@
   #bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
   #fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
   body.no-progress #progress { display: none; }
+
+  /* ---- theme=glass: Apple-style liquid glass ------------------------------
+     OBS browser sources can't see the scene behind them, so backdrop-filter
+     would blur nothing. The "glass" is the cover itself, heavily blurred and
+     saturated, under a bright specular rim. */
+  #frost {
+    /* every theme: a blurred copy of the cover tints the card */
+    position: absolute; inset: -30px;
+    background-size: cover; background-position: center;
+    filter: blur(34px) saturate(1.9) brightness(.85);
+    opacity: var(--frost, .3); transition: background-image .8s;
+    pointer-events: none;
+  }
+  body.no-card #frost { display: none; }
+  body.glass {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --bar1: var(--accent);
+    --bar2: rgba(255,255,255,.95); /* white tips keep the bars readable on a same-colored tint */
+    --cap: rgba(255,255,255,0);
+    --bar-round: 99;
+    --bar-glow: 10;
+  }
+  body.glass #card {
+    border-radius: 30px;
+    padding: 14px 20px 14px 14px;
+    background: rgba(255,255,255,.08);
+    box-shadow:
+      0 18px 50px rgba(0,0,0,.35),
+      0 2px 6px rgba(0,0,0,.2),
+      inset 0 1px 0 rgba(255,255,255,.55),
+      inset 0 -1px 0 rgba(255,255,255,.12),
+      inset 0 0 22px rgba(255,255,255,.08);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  }
+  body.glass #glow { display: none; }
+  body.glass { --frost: .62; }
+  body.glass #card::before {
+    /* liquid tint + soft top light */
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background:
+      radial-gradient(120% 70% at 20% -10%, rgba(255,255,255,.35), transparent 55%),
+      linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 40%, rgba(0,0,0,.12));
+  }
+  body.glass #card::after {
+    /* specular rim: bright at top-left and bottom-right, clear in between */
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 30%, rgba(255,255,255,0) 50%, rgba(255,255,255,.12) 70%, rgba(255,255,255,.6));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  body.glass #art-wrap {
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 .5px rgba(255,255,255,.35);
+  }
+  body.glass #label {
+    font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: none;
+    color: rgba(255,255,255,.75);
+  }
+  body.glass #label::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  body.glass #title { font-size: 21px; font-weight: 650; letter-spacing: -.01em; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
+  body.glass #artist { color: rgba(255,255,255,.72); font-weight: 500; }
+  body.glass #bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.22); }
+  body.glass #fill { background: linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow: 0 0 10px var(--accent); border-radius: 3px; }
+  body.glass #progress { color: rgba(255,255,255,.7); }
+
+  /* ---- theme=vinyl: a spinning record --------------------------------------
+     The cover is the record's center label; the record spins at 33 1/3 rpm
+     while playing and the tonearm swings onto it. */
+  #vinyl, #tonearm { display: none; }
+  body.vinyl {
+    font-family: "Georgia", "Iowan Old Style", "Palatino Linotype", serif;
+    --bar1: var(--accent);
+    --bar2: var(--accent2);
+    --cap: rgba(255,236,200,.85);
+    --bar-round: 1;
+  }
+  body.vinyl #card {
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(38,26,20,.92), rgba(20,14,12,.92));
+    box-shadow: 0 10px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,220,170,.08);
+  }
+  body.vinyl #glow { opacity: .18; }
+  body.vinyl #art-wrap { width: 150px; overflow: visible; background: none; box-shadow: none; border-radius: 0; }
+  body.vinyl #art-wrap img { display: none; }
+  body.vinyl #vinyl {
+    display: block; position: absolute; top: 0; left: 0; width: 128px; height: 128px; border-radius: 50%; z-index: 1;
+    background:
+      radial-gradient(circle, transparent 0 31%, rgba(255,255,255,.06) 31.5%, transparent 32.5%),
+      repeating-radial-gradient(circle, #141414 0 1.2px, #1d1d1d 1.6px 2.4px),
+      #111;
+    box-shadow: 0 4px 14px rgba(0,0,0,.6);
+    animation: spin 1.8s linear infinite;
+  }
+  body.vinyl #vinyl::before {
+    /* light catching the grooves; counter-rotated so it stays put while the record spins */
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 30deg, transparent 0 10%, rgba(255,255,255,.13) 14%, transparent 20% 60%, rgba(255,255,255,.1) 64%, transparent 70%);
+    animation: spin 1.8s linear infinite reverse;
+  }
+  body.vinyl #vlabel {
+    position: absolute; inset: 30%; border-radius: 50%;
+    background: #b45309 center / cover;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.4);
+  }
+  body.vinyl #vlabel::after { content: ""; position: absolute; inset: 44%; border-radius: 50%; background: #0b0b0b; }
+  body.vinyl #card.paused #vinyl, body.vinyl #card.paused #vinyl::before { animation-play-state: paused; }
+  body.vinyl #tonearm {
+    /* SVG arm; pivot sits just off the record's top-right, needle lands on the grooves */
+    display: block; position: absolute; left: 92px; top: -8px; width: 70px; height: 116px; z-index: 3;
+    transform-origin: 50px 14px; transform: rotate(0deg);
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,.55));
+    transition: transform .9s cubic-bezier(.3,.7,.2,1);
+  }
+  body.vinyl #tonearm svg { display: block; }
+  body.vinyl #card.paused #tonearm { transform: rotate(-26deg); }
+  body.vinyl #label { color: var(--accent); font-family: "Segoe UI", system-ui, sans-serif; }
+  body.vinyl #label::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  body.vinyl #title { font-size: 23px; font-style: italic; color: #fff7ed; }
+  body.vinyl #artist { color: rgba(255,237,213,.7); }
+  body.vinyl #vlabel { background-color: var(--accent); }
+  body.vinyl #progress { font-family: "Segoe UI", system-ui, sans-serif; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- theme=retro: hi-fi deck LCD with segmented level meters ------------ */
+  body.retro {
+    font-family: "VT323", "Consolas", "Courier New", monospace;
+    --bar1: var(--accent); --bar2: var(--accent2);
+    --frost: .25;
+    --cap: #ff4d4d;
+    --bar-seg: 2;
+  }
+  body.retro #card {
+    border-radius: 6px; padding: 14px;
+    background: linear-gradient(180deg, #2b2d31, #17181b);
+    box-shadow: 0 10px 30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px #000;
+  }
+  body.retro #glow { display: none; }
+  body.retro #art-wrap { width: 116px; height: 116px; margin: 6px; border-radius: 2px; box-shadow: 0 0 0 3px #0a0c0b, 0 0 0 4px #3a3d42; }
+  body.retro #art-wrap img { filter: contrast(1.15) saturate(.8); }
+  body.retro #art-wrap::after {
+    content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+  }
+  body.retro #info {
+    padding: 8px 12px; border-radius: 3px;
+    background: radial-gradient(120% 140% at 30% 0%, rgba(20,24,22,.85), rgba(4,6,5,.92) 70%);
+    box-shadow: inset 0 0 0 2px #000;
+  }
+  body.retro #info::after {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  }
+  body.retro #label { color: var(--accent); font-size: 15px; letter-spacing: .12em; font-weight: 400; }
+  body.retro #label::before { width: 8px; height: 8px; border-radius: 0; background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; }
+  body.retro #title { font-size: 28px; font-weight: 400; margin-top: 0; line-height: 1.05; color: #f4fff8; text-shadow: 0 0 6px var(--accent); text-transform: uppercase; }
+  body.retro #artist { font-size: 19px; color: var(--accent2); margin-top: 0; text-transform: uppercase; }
+  body.retro #eq { flex: none; height: 40px; }
+  body.retro #progress { font-size: 16px; color: var(--accent2); }
+  body.retro #bar { height: 6px; border-radius: 0; background: rgba(255,255,255,.08); }
+  body.retro #fill { background: repeating-linear-gradient(90deg, var(--accent) 0 4px, transparent 4px 6px); }
+
+  /* ---- compact=1: one-line pill, works with every theme -------------------
+     Progress shows as a ring around the round cover. */
+  body.compact { --cap: rgba(255,255,255,0); }
+  body.compact.classic { --bar-round: 1; }
+  body.compact #card { display: inline-flex; width: var(--cw, 460px); box-sizing: border-box; padding: 10px 20px 10px 10px; border-radius: 999px; gap: 12px; align-items: center; }
+  body.compact #art-wrap {
+    /* progress as a ring filling clockwise around the cover */
+    width: 40px; height: 40px; border-radius: 50%; box-shadow: none;
+    background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), rgba(255,255,255,.18) 0);
+  }
+  body.compact #art-wrap img { inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; }
+  body.compact.no-progress #art-wrap { background: none; }
+  body.compact.no-progress #art-wrap img { inset: 0; width: 100%; height: 100%; }
+  body.compact #info { flex-direction: row; align-items: center; gap: 12px; min-width: 0; }
+  body.compact #eq { order: -1; flex: none; width: 54px; height: 26px; margin: 0; }
+  body.compact #label, body.compact #progress { display: none; }
+  /* fixed width: long names scroll inside instead of resizing the pill */
+  body.compact #title { font-size: 17px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 62%; }
+  body.compact #artist { font-size: 15px; margin: 0; flex: 1 1 0; min-width: 40px; }
+  body.compact #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
+  body.compact .marquee span { padding-right: 0; }
+  body.compact #card::before, body.compact #card::after { border-radius: 999px; }
+  /* glass: thinner rim on the pill */
+  body.compact.glass #card { padding: 8px 20px 8px 8px; }
+  /* vinyl: a small spinning record inside the ring */
+  body.compact.vinyl #art-wrap { overflow: hidden; }
+  body.compact.vinyl #vinyl { top: 3px; left: 3px; width: 34px; height: 34px; }
+  body.compact.vinyl.no-progress #vinyl { top: 0; left: 0; width: 40px; height: 40px; }
+  body.compact.vinyl #tonearm { display: none; }
+  body.compact.vinyl #title { font-size: 18px; }
+  /* retro: keep the deck's square edges and LCD strip */
+  body.compact.retro #card { border-radius: 6px; padding: 8px; }
+  body.compact.retro #art-wrap { margin: 0; box-shadow: none; }
+  body.compact.retro #info { padding: 6px 12px; }
+  body.compact.retro #title { font-size: 24px; }
+  body.compact.retro #artist { font-size: 18px; border-left-color: rgba(255,255,255,.15); }
+  body.compact.retro #eq { height: 28px; }
+
+  /* ---- game-inspired themes: brand palettes, no logos ---------------------
+     Each sets its own colors (see BRAND in the script); ?accent= overrides. */
+
+  /* theme=lol: hextech gold frame on deep navy, teal magic glow */
+  body.lol { --bar-round: 0; --cap: #f0e6d2; --frost: .18; --bar1: #785a28; --bar2: var(--accent); }
+  body.lol #card {
+    border-radius: 0;
+    background: linear-gradient(180deg, rgba(1,10,19,.95), rgba(9,20,40,.94));
+    box-shadow: inset 0 0 0 1px #c8aa6e, inset 0 0 0 4px rgba(1,10,19,.9), inset 0 0 0 5px rgba(120,90,40,.8), 0 0 24px rgba(10,200,185,.15);
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+  }
+  body.lol #glow { display: none; }
+  body.lol #art-wrap { border-radius: 0; box-shadow: 0 0 0 1px #c8aa6e, 0 0 0 3px #010a13, 0 0 0 4px #785a28, 0 0 16px rgba(10,200,185,.35); }
+  body.lol #label { font-family: "Cinzel", Georgia, serif; color: var(--accent2); letter-spacing: .22em; }
+  body.lol #label::before { border-radius: 0; transform: rotate(45deg); background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  body.lol #title { font-family: "Cinzel", Georgia, serif; font-size: 22px; text-transform: uppercase; letter-spacing: .04em; color: #f0e6d2; }
+  body.lol #artist { color: #a09b8c; }
+  body.lol #bar { border-radius: 0; background: #1e2328; box-shadow: inset 0 0 0 1px #463714; }
+  body.lol #fill { background: linear-gradient(90deg, #785a28, var(--accent)); }
+
+  /* theme=cs: CS2 in-game HUD. White text on a dark fade, a killfeed-style
+     tag with the red "your kill" outline, T gold and CT blue team colors. */
+  body.cs {
+    font-family: "Rajdhani", "Arial Narrow", "Segoe UI", sans-serif;
+    --bar-round: 0; --bar1: rgba(255,255,255,.55); --bar2: #fff; --cap: var(--accent); --frost: 0;
+  }
+  body.cs #card {
+    border-radius: 0; padding: 12px 18px 15px 12px;
+    background: linear-gradient(90deg, rgba(0,0,0,.72), rgba(0,0,0,.45) 70%, rgba(0,0,0,.2));
+    box-shadow: none;
+  }
+  body.cs #card::after {
+    /* team split along the bottom edge */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; pointer-events: none;
+    background: linear-gradient(90deg, var(--accent) 0 50%, var(--accent2) 50% 100%);
+  }
+  body.cs #glow { display: none; }
+  body.cs #art-wrap { border-radius: 0; box-shadow: 0 0 0 1px rgba(255,255,255,.3); }
+  body.cs #label {
+    align-self: flex-start; padding: 1px 8px 1px 6px; border-radius: 3px;
+    background: rgba(0,0,0,.6); box-shadow: inset 0 0 0 2px #e0302a;
+    color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  }
+  body.cs #label::before { width: 0; height: 0; border-radius: 0; background: none; box-shadow: none;
+    border-left: 7px solid #fff; border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  body.cs #title { font-size: 30px; font-weight: 700; text-transform: uppercase; line-height: 1.05; margin-top: 6px; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  body.cs #artist { font-size: 18px; font-weight: 600; color: var(--accent2); text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  body.cs #progress { font-size: 15px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  body.cs #bar { height: 4px; border-radius: 0; background: rgba(255,255,255,.18); }
+  body.cs #fill { background: #fff; }
+
+  /* theme=faceit: the FaceitWatcher overlay layout. Round avatar-style cover
+     with an orange ring, bold name, a level-style gauge (here: track progress)
+     next to the artist, grey uppercase label on the right, full-width pill
+     progress bar with values underneath. #14161a at 85%, 12px radius, Geist. */
+  body.faceit { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --bar-round: 4; --cap: rgba(255,255,255,0); --frost: 0; }
+  body.faceit #card {
+    display: grid; width: 420px; box-sizing: border-box; padding: 16px;
+    grid-template-columns: 56px minmax(0, 1fr) 124px; grid-template-rows: 26px 30px auto;
+    column-gap: 14px; row-gap: 0;
+    border-radius: 12px; background: rgba(20,22,26,.85); box-shadow: none;
+  }
+  body.faceit #info { display: contents; }
+  body.faceit #glow { display: none; }
+  body.faceit #art-wrap { grid-area: 1 / 1 / 3 / 2; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 0 0 2px var(--accent); }
+  body.faceit #title { grid-area: 1 / 2; margin: 0; font-size: 22px; font-weight: 700; line-height: 1.1; align-self: start; margin-top: -5px; }
+  body.faceit #artist {
+    grid-area: 2 / 2; align-self: center; margin: 0 0 0 38px;
+    font-size: 17px; font-weight: 700; color: #fff;
+  }
+  #lvl { display: none; }
+  body.faceit #lvl { display: block; grid-area: 2 / 2; align-self: center; width: 30px; height: 30px; }
+  body.faceit #lvl svg { display: block; width: 100%; height: 100%; }
+  body.faceit #label {
+    grid-area: 1 / 3; justify-self: end; margin-top: 2px;
+    color: #9aa0a6; font-size: 11px; font-weight: 400; letter-spacing: .05em;
+  }
+  body.faceit #label::before { display: none; }
+  body.faceit #eq { grid-area: 2 / 3; width: 124px; height: 28px; margin: 0; align-self: center; }
+  body.faceit #progress {
+    grid-area: 3 / 1 / 4 / 4; margin-top: 16px;
+    flex-wrap: wrap; justify-content: space-between; gap: 3px 0;
+    color: #9aa0a6; font-size: 12px;
+  }
+  body.faceit #bar { order: -1; flex: 0 0 100%; height: 6px; border-radius: 99px; background: rgba(255,255,255,.15); }
+  body.faceit #fill { background: var(--accent); }
+
+  /* theme=truedamage: inspired by the League "Superstar" music screen.
+     Record with a neon ring on a dark green diamond-pattern card; the bars
+     light up purple to cyan up to the playhead and stay dim after it, over a
+     red-to-gold progress line with a round marker. Builds on the vinyl rules. */
+  body.truedamage {
+    font-family: "Cinzel", Georgia, serif; --frost: 0;
+  }
+  body.truedamage #card {
+    border-radius: 2px;
+    background:
+      repeating-linear-gradient(45deg, rgba(120,220,180,.035) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(-45deg, rgba(120,220,180,.035) 0 1px, transparent 1px 22px),
+      linear-gradient(180deg, rgba(14,48,40,.96), rgba(7,26,22,.96));
+    box-shadow: inset 0 0 0 2px #0b1513, inset 0 0 0 3px rgba(90,170,140,.35), 0 10px 30px rgba(0,0,0,.5);
+  }
+  body.truedamage #glow { display: none; }
+  body.truedamage #vinyl { box-shadow: 0 0 0 4px var(--accent), 0 0 0 5px rgba(0,0,0,.6), 0 0 18px var(--accent); }
+  body.truedamage #vinyl::after {
+    /* grooves in the colored ring like the screenshot's records */
+    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.08);
+  }
+  body.truedamage #vlabel { inset: 26%; box-shadow: 0 0 0 2px rgba(0,0,0,.6), 0 0 0 4px rgba(255,255,255,.06); }
+  body.truedamage #label { font-family: "Cinzel", Georgia, serif; color: #f0e6d2; letter-spacing: .22em; font-size: 12px; }
+  body.truedamage #label::before { border-radius: 0; transform: rotate(45deg); background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  body.truedamage #title {
+    font-size: 24px; font-style: normal; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #f0e6d2;
+    text-shadow: -1px 0 rgba(255,43,214,.6), 1px 0 rgba(43,240,255,.6); /* slight glitch split */
+  }
+  body.truedamage #artist { font-family: "Segoe UI", system-ui, sans-serif; color: #c8aa6e; letter-spacing: .04em; }
+  body.truedamage #eq { flex: 1 1 0; min-height: 38px; }
+  body.truedamage #bar { visibility: hidden; }
+  body.truedamage #progress { color: #a09b8c; }
+  body.compact.truedamage #card { border-radius: 2px; }
+  body.compact.truedamage #vinyl { box-shadow: 0 0 0 2px var(--accent); }
+  body.compact.truedamage #title { font-size: 17px; }
+  body.compact.truedamage #eq { flex: none; min-height: 0; width: 70px; height: 30px; }
+
+  /* compact versions keep the hard edges */
+  body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
+  body.compact.cs #label { display: none; }
+  body.compact.faceit #card { display: inline-flex; width: var(--cw, 460px); padding: 10px 20px 10px 10px; }
+  body.compact.faceit #info { display: flex; }
+  body.compact.faceit #art-wrap { width: 40px; height: 40px; }
+  body.compact.faceit #title { margin-top: 0; font-size: 17px; }
+  body.compact.faceit #artist { margin: 0; font-size: 15px; color: #9aa0a6; font-weight: 400; }
+  body.compact.faceit #lvl { display: none; }
+  body.compact.faceit #eq { width: 54px; height: 26px; }
+  body.compact.lol #card { padding: 10px 22px 10px 12px; }
+  body.compact.lol #art-wrap, body.compact.cs #art-wrap,
+  body.compact.lol #art-wrap img, body.compact.cs #art-wrap img { border-radius: 0; }
+  body.compact.lol #art-wrap, body.compact.faceit #art-wrap { box-shadow: none; }
+  body.compact.lol #title { font-size: 17px; }
+  body.compact.cs #title { font-size: 21px; }
+  body.compact.faceit #card { border-radius: 12px; }
+
+  /* ---- custom overrides from the editor (?bg=, ?text=, ?radius=, ?font=) --
+     These are explicit user choices, so they beat every theme. */
+  body.custom-bg #card { background: var(--custom-bg) !important; }
+  body.custom-text #title { color: var(--custom-text) !important; }
+  body.custom-text #artist, body.custom-text #progress { color: var(--custom-text) !important; opacity: .72; }
+  body.custom-radius #card { border-radius: var(--custom-radius) !important; clip-path: none !important; }
+  body.custom-font #card, body.custom-font #card * { font-family: var(--custom-font) !important; }
+  body.no-label #label, body.no-cover #art-wrap, body.no-eq #eq { display: none !important; }
+  body.no-eq.truedamage #bar { visibility: visible; }
+
+  /* ---- card=0 works in every theme: drop the panel, keep the content ------
+     Placed last so it wins over each theme's own card rules. */
+  body.no-card #card {
+    background: transparent; box-shadow: none; clip-path: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  body.no-card #card::before, body.no-card #card::after,
+  body.no-card #info::after, body.no-card #frost, body.no-card #glow { display: none; }
+  body.no-card #info { background: transparent; box-shadow: none; }
+  body.no-card #title, body.no-card #artist, body.no-card #label, body.no-card #progress {
+    text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.5);
+  }
 </style>
 </head>
 <body>
 <div id="card">
+  <div id="frost"></div>
   <div id="glow"></div>
-  <div id="art-wrap"><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
+  <div id="art-wrap"><div id="vinyl"><div id="vlabel"></div></div><div id="tonearm"><svg viewBox="0 0 70 116" width="70" height="116" aria-hidden="true">
+      <defs><linearGradient id="arm-metal" x1="0" x2="1"><stop offset="0" stop-color="#7d838d"/><stop offset=".5" stop-color="#f1f3f6"/><stop offset="1" stop-color="#7d838d"/></linearGradient></defs>
+      <rect x="51" y="-1" width="13" height="10" rx="2.5" transform="rotate(25 57 4)" fill="#262a31" stroke="#5a616c"/>
+      <path d="M50 14 L25 78 Q21 88 15 95" stroke="url(#arm-metal)" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+      <g transform="translate(13 99) rotate(32)"><rect x="-5" y="-5" width="10" height="12" rx="1.6" fill="#dfe2e7" stroke="#8a9099" stroke-width=".8"/><rect x="-3" y="6" width="6" height="4" rx=".8" fill="#1b1e23"/></g>
+      <circle cx="50" cy="14" r="11" fill="#1b1e23" stroke="#4d535d" stroke-width="1.5"/>
+      <circle cx="50" cy="14" r="5" fill="url(#arm-metal)"/>
+    </svg></div><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
   <div id="info">
     <div id="label">Now Playing</div>
     <div id="title" class="marquee"><span></span></div>
+    <div id="lvl"></div>
     <div id="artist" class="marquee"><span></span></div>
     <canvas id="eq"></canvas>
     <div id="progress"><span id="cur">0:00</span><div id="bar"><div id="fill"></div></div><span id="dur">0:00</span></div>
@@ -107,17 +487,70 @@
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
 const q = new URLSearchParams(location.search);
 const opt = {
-  bars: +q.get('bars') || 32,
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | lol | cs | faceit ("minimal" = classic + compact)
+  compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
+  bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
+  accent2: q.get('accent2'),          // optional second color for gradients
+  bg: q.get('bg'),                    // card background hex, with bgAlpha 0..1
+  bgAlpha: q.has('bgAlpha') ? Math.min(1, Math.max(0, +q.get('bgAlpha'))) : .8,
+  text: q.get('text'),                // title text color hex
+  radius: q.has('radius') ? Math.max(0, +q.get('radius')) : null,
+  font: q.get('font'),                // any Google Fonts family name
+  label: q.has('label') ? q.get('label') : 'Now Playing',
+  showLabel: q.get('showLabel') !== '0',
+  album: q.get('album') !== '0',
+  cover: q.get('cover') !== '0',
+  eq: q.get('eq') !== '0',
+  demo: q.get('demo') === '1',        // built-in demo songs, for previews and the editor
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
+  scale: Math.min(3, Math.max(.3, +q.get('scale') || 1)), // overall size, 1 = default
+  width: +q.get('width') || 0,         // compact pill width in px (default 460)
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
 };
+if (opt.theme === 'minimal') opt.theme = 'classic';
+if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.toggle('compact', opt.compact);
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700' };
+if (FONTS[opt.theme]) {
+  const f = document.createElement('link');
+  f.rel = 'stylesheet'; f.href = `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
+  document.head.appendChild(f);
+}
+// Game themes use their own palette instead of colors picked from the cover.
+const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
-if (opt.accent) setAccent('#' + opt.accent.replace('#', ''));
+if (opt.scale !== 1) { document.body.style.transformOrigin = '0 0'; document.body.style.transform = `scale(${opt.scale})`; }
+if (opt.width) document.body.style.setProperty('--cw', Math.max(240, opt.width) + 'px');
+if (BRAND && !opt.accent) setAccent(...BRAND);
+const hex = v => '#' + String(v).replace('#', '');
+function rgba(h, a) {
+  const n = parseInt(h.slice(1).replace(/^(.)(.)(.)$/, '$1$1$2$2$3$3'), 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+}
+const bs = document.body.style, bc = document.body.classList;
+if (opt.bg) { bs.setProperty('--custom-bg', rgba(hex(opt.bg), opt.bgAlpha)); bc.add('custom-bg'); }
+if (opt.text) { bs.setProperty('--custom-text', hex(opt.text)); bc.add('custom-text'); }
+if (opt.radius !== null) { bs.setProperty('--custom-radius', opt.radius + 'px'); bc.add('custom-radius'); }
+if (opt.font) {
+  const f = document.createElement('link');
+  f.rel = 'stylesheet'; f.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(opt.font).replace(/%20/g, '+')}:wght@400;600;700&display=swap`;
+  document.head.appendChild(f);
+  bs.setProperty('--custom-font', `"${opt.font.replace(/"/g, '')}", system-ui, sans-serif`); bc.add('custom-font');
+}
+bc.toggle('no-label', !opt.showLabel);
+bc.toggle('no-cover', !opt.cover);
+bc.toggle('no-eq', !opt.eq);
+if (opt.accent) {
+  // A fixed color also replaces the cover as the source of the card tint.
+  setAccent('#' + opt.accent.replace('#', ''), opt.accent2 ? '#' + opt.accent2.replace('#', '') : undefined);
+  document.getElementById('frost').style.background = 'radial-gradient(circle at 25% 45%, var(--accent), transparent 75%)';
+}
 
 const card = document.getElementById('card');
 const $ = id => document.getElementById(id);
@@ -146,9 +579,11 @@ function setArt(url) {
   const img = artBack;
   img.onload = () => {
     img.style.opacity = 1;
+    $('vlabel').style.backgroundImage = `url("${url}")`;
+    if (!opt.accent) $('frost').style.backgroundImage = `url("${url}")`;
     artFront.style.opacity = 0;
     [artFront, artBack] = [img, artFront];
-    if (!opt.accent) pickAccent(url);
+    if (!opt.accent && !BRAND) pickAccent(url);
   };
   img.src = url;
 }
@@ -156,11 +591,11 @@ function setArt(url) {
 function onTrack(t) {
   track = t; trackAt = performance.now();
   setMarquee($('title'), t.title || '');
-  setMarquee($('artist'), [t.artist, t.album].filter(Boolean).join(' · '));
+  setMarquee($('artist'), [t.artist, opt.album && t.album].filter(Boolean).join(' · '));
   setArt(t.art);
   card.classList.toggle('paused', !t.playing);
   card.classList.add('show');
-  $('label').textContent = t.playing ? 'Now Playing' : 'Paused';
+  $('label').textContent = t.playing ? opt.label : 'Paused';
 }
 
 function fmt(s) {
@@ -232,7 +667,7 @@ function simulate(t) {
 }
 
 function draw(now) {
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = (window.devicePixelRatio || 1) * opt.scale; // keep bars sharp when scaled up
   const w = cv.clientWidth, h = cv.clientHeight;
   if (cv.width !== w * dpr || cv.height !== h * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -242,27 +677,40 @@ function draw(now) {
   if (playing && now - lastBands > 1500) simulate(now / 1000);
   else if (!playing) target.fill(0);
 
-  const styles = getComputedStyle(document.documentElement);
+  const styles = getComputedStyle(document.body);
   const grad = g.createLinearGradient(0, h, 0, 0);
-  grad.addColorStop(0, styles.getPropertyValue('--accent'));
-  grad.addColorStop(1, styles.getPropertyValue('--accent2'));
+  grad.addColorStop(0, styles.getPropertyValue('--bar1'));
+  grad.addColorStop(1, styles.getPropertyValue('--bar2'));
+  const round = +styles.getPropertyValue('--bar-round') || 0;
+  const glow = +styles.getPropertyValue('--bar-glow') || 0;
+  const cap = styles.getPropertyValue('--cap');
+  const seg = +styles.getPropertyValue('--bar-seg') || 0;
+  g.shadowColor = styles.getPropertyValue('--bar1');
 
-  const gap = 3, bw = (w - gap * (opt.bars - 1)) / opt.bars;
-  for (let i = 0; i < opt.bars; i++) {
+  const pct = track && track.duration
+    ? Math.min(1, (track.position + (playing ? (now - trackAt) / 1000 : 0)) / track.duration) : 0;
+  const gap = Math.min(3, w / opt.bars * .3), bw = (w - gap * (opt.bars - 1)) / opt.bars;
+  if (opt.theme === 'truedamage') { drawSuperstar(w, h, bw, gap, pct); }
+  else for (let i = 0; i < opt.bars; i++) {
     // Fast attack, slower release, falling peak caps.
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
     peak[i] = Math.max(level[i], peak[i] - .012);
     const x = i * (bw + gap);
     const bh = Math.max(2, level[i] * (h - 6));
+    if (seg) { drawSegments(x, bw, h, level[i], peak[i], seg, cap, styles); continue; }
     g.fillStyle = grad;
-    g.beginPath(); g.roundRect(x, h - bh, bw, bh, Math.min(3, bw / 2)); g.fill();
-    g.fillStyle = 'rgba(255,255,255,.85)';
+    g.shadowBlur = glow;
+    g.beginPath(); g.roundRect(x, h - bh, bw, bh, Math.min(round, bw / 2)); g.fill();
+    g.shadowBlur = 0;
+    g.fillStyle = cap;
     g.fillRect(x, h - 4 - peak[i] * (h - 6), bw, 2);
   }
 
   if (track && track.duration) {
     const pos = Math.min(track.duration, track.position + (playing ? (now - trackAt) / 1000 : 0));
     $('fill').style.width = (pos / track.duration * 100) + '%';
+    document.body.style.setProperty('--p', (pos / track.duration * 100).toFixed(2));
+    if (opt.theme === 'faceit') setLevel(Math.ceil(pos / track.duration * 10));
     $('cur').textContent = fmt(pos);
     $('dur').textContent = fmt(track.duration);
   }
@@ -270,10 +718,125 @@ function draw(now) {
 }
 requestAnimationFrame(draw);
 
+// FACEIT level badge (same drawing as FaceitWatcher). The "level" climbs
+// from 1 to 10 as the song plays.
+let shownLevel = 0;
+function setLevel(level) {
+  const n = Math.min(10, Math.max(1, level || 1));
+  if (n === shownLevel) return;
+  shownLevel = n;
+  const color = n >= 10 ? '#fe1f00' : n >= 8 ? '#ff6309' : n >= 4 ? '#ffc800' : n >= 2 ? '#1ce400' : '#eeeeee';
+  const arc = (r, from, sweep) => {
+    const pt = d => { const a = d * Math.PI / 180; return `${(50 + r * Math.sin(a)).toFixed(2)} ${(50 - r * Math.cos(a)).toFixed(2)}`; };
+    return `M ${pt(from)} A ${r} ${r} 0 ${sweep > 180 ? 1 : 0} 1 ${pt(from + sweep)}`;
+  };
+  $('lvl').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="48" fill="#1f2125" stroke="#2c2f34" stroke-width="2"/>
+    <path d="${arc(36, 225, 270)}" fill="none" stroke="#3a3d42" stroke-width="9"/>
+    <path d="${arc(36, 225, 27 * n)}" fill="none" stroke="${color}" stroke-width="9"/>
+    <text x="50" y="51" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif"
+      font-weight="700" font-size="${n === 10 ? 32 : 38}" fill="${color}">${n}</text></svg>`;
+}
+
+// True Damage: bars up to the playhead glow magenta to cyan, the rest stay
+// dim, over a red-to-gold progress line with a round marker.
+function drawSuperstar(w, h, bw, gap, pct) {
+  const line = h - 8, top = 2, room = line - top - 4;
+  const head = pct * w;
+  for (let i = 0; i < opt.bars; i++) {
+    level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
+    const x = i * (bw + gap), bh = Math.max(3, level[i] * room), y = line - 3 - bh;
+    if (x + bw <= head) {
+      const hue = 290 - 95 * Math.min(1, (x / Math.max(1, head)) ** 2); // magenta -> cyan near the playhead
+      const gr = g.createLinearGradient(0, y + bh, 0, y);
+      gr.addColorStop(0, `hsl(${hue + 20} 90% 45%)`);
+      gr.addColorStop(1, `hsl(${hue} 100% 68%)`);
+      g.fillStyle = gr; g.shadowColor = `hsl(${hue} 100% 60%)`; g.shadowBlur = 8;
+    } else {
+      g.fillStyle = 'rgba(70,60,170,.32)'; g.shadowBlur = 0;
+    }
+    g.fillRect(x, y, bw, bh);
+    g.shadowBlur = 0;
+  }
+  // progress line
+  g.fillStyle = 'rgba(60,70,160,.35)'; g.fillRect(0, line, w, 2);
+  const lg = g.createLinearGradient(0, 0, Math.max(1, head), 0);
+  lg.addColorStop(0, '#ff3b3b'); lg.addColorStop(.6, '#ff7a2a'); lg.addColorStop(1, '#ffc94a');
+  g.fillStyle = lg; g.shadowColor = '#ff7a2a'; g.shadowBlur = 6; g.fillRect(0, line - .5, head, 3); g.shadowBlur = 0;
+  // marker
+  const cx = Math.min(w - 7, Math.max(7, head)), cy = line + .5;
+  g.beginPath(); g.arc(cx, cy, 6.5, 0, 7); g.fillStyle = '#10161a'; g.fill();
+  g.lineWidth = 1.5; g.strokeStyle = '#c8aa6e'; g.stroke();
+  g.beginPath(); g.moveTo(cx - 2.8, cy + .2); g.lineTo(cx - .6, cy + 2.3); g.lineTo(cx + 3, cy - 2.2);
+  g.strokeStyle = '#e8f6ff'; g.lineWidth = 1.6; g.stroke();
+}
+
+// LED-style meter: lit segments go accent, second accent, red with height.
+function drawSegments(x, bw, h, lvl, pk, seg, cap, styles) {
+  const low = styles.getPropertyValue('--accent'), mid = styles.getPropertyValue('--accent2');
+  const step = seg + 2, n = Math.floor(h / step), lit = Math.round(lvl * n), top = Math.min(n - 1, Math.round(pk * n));
+  for (let k = 0; k < n; k++) {
+    const f = k / n, on = k < lit;
+    g.fillStyle = on ? (f > .85 ? '#ff4d4d' : f > .62 ? mid : low) : 'rgba(255,255,255,.06)';
+    g.shadowBlur = on ? 6 : 0; g.shadowColor = g.fillStyle;
+    g.fillRect(x, h - (k + 1) * step + 2, bw, seg);
+  }
+  g.shadowBlur = 0;
+  if (top > 0) { g.fillStyle = cap; g.fillRect(x, h - (top + 1) * step + 2, bw, seg); }
+}
+
 // ---- connection -------------------------------------------------------------
-const es = new EventSource((opt.server || '') + '/events');
-es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
-es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
+if (opt.demo) startDemo();
+else {
+  const es = new EventSource((opt.server || '') + '/events');
+  es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
+  es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
+}
+
+// ---- demo mode ---------------------------------------------------------------
+// Made-up songs and a fake spectrum, so the overlay can be previewed without
+// the userscript. The editor drives it with postMessage('next' | 'toggle').
+function startDemo() {
+  function cover(c1, c2, shape) {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 256, 256); gr.addColorStop(0, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    g.globalAlpha = .35; g.fillStyle = '#fff';
+    if (shape === 'sun') { g.beginPath(); g.arc(128, 150, 70, 0, 7); g.fill(); g.globalAlpha = .5; g.fillStyle = c2; for (let i = 0; i < 6; i++) g.fillRect(0, 150 + i * 14, 256, 5 + i); }
+    if (shape === 'rings') { g.lineWidth = 10; g.strokeStyle = '#fff'; for (let r = 30; r < 160; r += 30) { g.beginPath(); g.arc(128, 128, r, 0, 7); g.stroke(); } }
+    if (shape === 'grid') { for (let x = 0; x < 8; x++) for (let y = 0; y < 8; y++) if ((x * 7 + y * 3) % 5 < 2) g.fillRect(x * 32 + 4, y * 32 + 4, 24, 24); }
+    if (shape === 'wave') { g.lineWidth = 8; g.strokeStyle = '#fff'; for (let k = 0; k < 5; k++) { g.beginPath(); for (let x = 0; x <= 256; x += 4) g.lineTo(x, 70 + k * 30 + Math.sin(x / 20 + k) * 14); g.stroke(); } }
+    return c.toDataURL();
+  }
+  const tracks = [
+    { title: 'Neon Harbor', artist: 'Lumen Drive', album: 'Night Shift', duration: 214, bpm: 118, art: cover('#ff4f8b', '#5b2bff', 'sun') },
+    { title: 'Glass Gardens (Extended Mix) feat. Mira Solenne', artist: 'Kaito Aren', album: 'Bloom Cycle', duration: 389, bpm: 124, art: cover('#00d1b2', '#0a3d62', 'rings') },
+    { title: 'Paper Planes at Dawn', artist: 'The Quiet Static', album: 'Low Tide', duration: 176, bpm: 92, art: cover('#ffb347', '#d7263d', 'wave') },
+    { title: 'Pixel Rain', artist: 'Byte Orchard', album: '8-Bit Weather', duration: 201, bpm: 140, art: cover('#8bc34a', '#1b5e20', 'grid') },
+  ];
+  let idx = +q.get('demoTrack') || 0, playing = true, pos = 37, last = performance.now();
+  const send = () => onTrack({ ...tracks[idx % tracks.length], playing, position: pos, ts: Date.now() });
+  const next = () => { idx = (idx + 1) % tracks.length; pos = 0; send(); };
+  window.demo = { next, toggle() { playing = !playing; send(); return playing; } };
+  addEventListener('message', e => { if (e.data === 'next') next(); if (e.data === 'toggle') window.demo.toggle(); });
+  send();
+  setInterval(() => {
+    const now = performance.now(), dt = (now - last) / 1000; last = now;
+    if (!playing) return;
+    pos += dt; if (pos >= tracks[idx % tracks.length].duration) next();
+    // kick and bass on the beat, a moving mid melody, hats on the off-beats
+    const t = now / 1000, beat = (t * tracks[idx % tracks.length].bpm / 60) % 1, kick = Math.exp(-beat * 9), hat = Math.exp(-((beat + .5) % 1) * 14);
+    const bands = [];
+    for (let i = 0; i < 32; i++) {
+      const x = i / 31;
+      const v = .55 * Math.exp(-x * 2.2) + kick * .5 * Math.exp(-x * 6)
+        + .3 * Math.exp(-Math.pow((x - .4 - .12 * Math.sin(t * .9)) * 7, 2))
+        + hat * .35 * Math.exp(-Math.pow((x - .85) * 6, 2)) + Math.random() * .08;
+      bands.push(Math.round(255 * Math.min(1, v)));
+    }
+    onBands(bands);
+  }, 33);
+}
 </script>
 </body>
 </html>
