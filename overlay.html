@@ -10,6 +10,11 @@
     --text: #fff;
     --muted: rgba(255,255,255,.7);
     --card: rgba(14,14,18,.72);
+    --bar1: var(--accent);
+    --bar2: var(--accent2);
+    --cap: rgba(255,255,255,.85);
+    --bar-round: 3;
+    --bar-glow: 0;
   }
   html, body { margin: 0; background: transparent; overflow: hidden; }
   body {
@@ -88,10 +93,74 @@
   #bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
   #fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
   body.no-progress #progress { display: none; }
+
+  /* ---- theme=glass: Apple-style liquid glass ------------------------------
+     OBS browser sources can't see the scene behind them, so backdrop-filter
+     would blur nothing. The "glass" is the cover itself, heavily blurred and
+     saturated, under a bright specular rim. */
+  #frost { display: none; }
+  body.glass {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    --bar1: rgba(255,255,255,.4);
+    --bar2: rgba(255,255,255,.98);
+    --cap: rgba(255,255,255,0);
+    --bar-round: 99;
+    --bar-glow: 10;
+  }
+  body.glass #card {
+    border-radius: 30px;
+    padding: 14px 20px 14px 14px;
+    background: rgba(255,255,255,.08);
+    box-shadow:
+      0 18px 50px rgba(0,0,0,.35),
+      0 2px 6px rgba(0,0,0,.2),
+      inset 0 1px 0 rgba(255,255,255,.55),
+      inset 0 -1px 0 rgba(255,255,255,.12),
+      inset 0 0 22px rgba(255,255,255,.08);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  }
+  body.glass #glow { display: none; }
+  body.glass #frost {
+    display: block; position: absolute; inset: -30px;
+    background-size: cover; background-position: center;
+    filter: blur(34px) saturate(1.9) brightness(.85);
+    opacity: .62; transition: background-image .8s;
+    pointer-events: none;
+  }
+  body.glass #card::before {
+    /* liquid tint + soft top light */
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background:
+      radial-gradient(120% 70% at 20% -10%, rgba(255,255,255,.35), transparent 55%),
+      linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 40%, rgba(0,0,0,.12));
+  }
+  body.glass #card::after {
+    /* specular rim: bright at top-left and bottom-right, clear in between */
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.5px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.15) 30%, rgba(255,255,255,0) 50%, rgba(255,255,255,.12) 70%, rgba(255,255,255,.6));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  body.glass #art-wrap {
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 .5px rgba(255,255,255,.35);
+  }
+  body.glass #label {
+    font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: none;
+    color: rgba(255,255,255,.75);
+  }
+  body.glass #label::before { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,.9); }
+  body.glass #title { font-size: 21px; font-weight: 650; letter-spacing: -.01em; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
+  body.glass #artist { color: rgba(255,255,255,.72); font-weight: 500; }
+  body.glass #bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.22); }
+  body.glass #fill { background: rgba(255,255,255,.95); box-shadow: 0 0 10px rgba(255,255,255,.6); border-radius: 3px; }
+  body.glass #progress { color: rgba(255,255,255,.7); }
 </style>
 </head>
 <body>
 <div id="card">
+  <div id="frost"></div>
   <div id="glow"></div>
   <div id="art-wrap"><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
   <div id="info">
@@ -107,6 +176,7 @@
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
 const q = new URLSearchParams(location.search);
 const opt = {
+  theme: q.get('theme') || 'classic', // classic | glass
   bars: +q.get('bars') || 32,
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
   hidePaused: q.get('hidePaused') === '1',
@@ -114,6 +184,7 @@ const opt = {
   progress: q.get('progress') !== '0',
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
 };
+document.body.classList.toggle('glass', opt.theme === 'glass');
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
@@ -146,6 +217,7 @@ function setArt(url) {
   const img = artBack;
   img.onload = () => {
     img.style.opacity = 1;
+    $('frost').style.backgroundImage = `url("${url}")`;
     artFront.style.opacity = 0;
     [artFront, artBack] = [img, artFront];
     if (!opt.accent) pickAccent(url);
@@ -242,10 +314,14 @@ function draw(now) {
   if (playing && now - lastBands > 1500) simulate(now / 1000);
   else if (!playing) target.fill(0);
 
-  const styles = getComputedStyle(document.documentElement);
+  const styles = getComputedStyle(document.body);
   const grad = g.createLinearGradient(0, h, 0, 0);
-  grad.addColorStop(0, styles.getPropertyValue('--accent'));
-  grad.addColorStop(1, styles.getPropertyValue('--accent2'));
+  grad.addColorStop(0, styles.getPropertyValue('--bar1'));
+  grad.addColorStop(1, styles.getPropertyValue('--bar2'));
+  const round = +styles.getPropertyValue('--bar-round') || 0;
+  const glow = +styles.getPropertyValue('--bar-glow') || 0;
+  const cap = styles.getPropertyValue('--cap');
+  g.shadowColor = 'rgba(255,255,255,.55)';
 
   const gap = 3, bw = (w - gap * (opt.bars - 1)) / opt.bars;
   for (let i = 0; i < opt.bars; i++) {
@@ -255,8 +331,10 @@ function draw(now) {
     const x = i * (bw + gap);
     const bh = Math.max(2, level[i] * (h - 6));
     g.fillStyle = grad;
-    g.beginPath(); g.roundRect(x, h - bh, bw, bh, Math.min(3, bw / 2)); g.fill();
-    g.fillStyle = 'rgba(255,255,255,.85)';
+    g.shadowBlur = glow;
+    g.beginPath(); g.roundRect(x, h - bh, bw, bh, Math.min(round, bw / 2)); g.fill();
+    g.shadowBlur = 0;
+    g.fillStyle = cap;
     g.fillRect(x, h - 4 - peak[i] * (h - 6), bw, 2);
   }
 
