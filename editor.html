@@ -127,9 +127,12 @@
       <fieldset>
         <legend>Layout</legend>
         <div class="row"><span>Style</span>
-          <div class="seg" role="group" aria-label="Layout">
-            <button type="button" data-compact="0" aria-pressed="true">Card</button>
-            <button type="button" data-compact="1" aria-pressed="false">Compact</button>
+          <div class="inline" style="flex-wrap: wrap">
+            <div class="seg" role="group" aria-label="Layout" style="flex: none">
+              <button type="button" data-compact="0" aria-pressed="true">Card</button>
+              <button type="button" data-compact="1" aria-pressed="false">Compact</button>
+            </div>
+            <label class="check" style="white-space: nowrap"><input type="checkbox" id="still"> No animations</label>
           </div>
         </div>
         <div class="row" id="width-row"><span>Pill width</span>
@@ -217,7 +220,7 @@ const THEMES = [
 ];
 const BRAND_THEMES = ['lol', 'cs', 'faceit', 'truedamage'];
 const DEFAULTS = {
-  theme: 'classic', compact: false, width: 460, scale: 1,
+  theme: 'classic', compact: false, still: false, width: 460, scale: 1,
   accentMode: 'auto', accent: '#ff3d6e', accent2: '#ffb000',
   textOn: false, text: '#ffffff', card: true, bgOn: false, bg: '#101218', bgAlpha: .8, radiusOn: false, radius: 14,
   showLabel: true, label: 'Now Playing', font: '', album: true, cover: true,
@@ -242,6 +245,7 @@ function params(forObs) {
   const s = state, h = v => v.replace('#', '');
   if (s.theme !== 'classic') p.set('theme', s.theme);
   if (s.compact) { p.set('compact', '1'); if (s.width !== 460) p.set('width', s.width); }
+  if (s.still) p.set('still', '1');
   if (s.scale !== 1) p.set('scale', s.scale);
   if (s.accentMode === 'custom') { p.set('accent', h(s.accent)); p.set('accent2', h(s.accent2)); }
   if (s.textOn) p.set('text', h(s.text));
@@ -253,7 +257,8 @@ function params(forObs) {
   if (s.font) p.set('font', s.font);
   if (!s.album) p.set('album', '0');
   if (!s.cover) p.set('cover', '0');
-  if (!s.eq) p.set('eq', '0');
+  if (s.still) {}
+  else if (!s.eq) p.set('eq', '0');
   else if (s.bars !== (s.compact ? 7 : s.theme === 'faceit' ? 12 : 32)) p.set('bars', s.bars);
   if (!s.progress) p.set('progress', '0');
   if (s.hidePaused) p.set('hidePaused', '1');
@@ -310,7 +315,7 @@ document.querySelectorAll('[data-compact]').forEach(b => b.onclick = () => {
 });
 document.querySelectorAll('[data-accentmode]').forEach(b => b.onclick = () => { state.accentMode = b.dataset.accentmode; render(); });
 
-const checks = ['textOn', 'card', 'bgOn', 'radiusOn', 'showLabel', 'album', 'cover', 'eq', 'progress', 'hidePaused', 'demo', 'checker'];
+const checks = ['still', 'textOn', 'card', 'bgOn', 'radiusOn', 'showLabel', 'album', 'cover', 'eq', 'progress', 'hidePaused', 'demo', 'checker'];
 checks.forEach(id => $(id).onchange = e => { state[id] = e.target.checked; render(); });
 ['accent', 'accent2', 'text', 'bg'].forEach(id => $(id).oninput = e => { state[id] = e.target.value; render(); });
 $('accent').addEventListener('input', () => { state.accentMode = 'custom'; });
@@ -341,7 +346,8 @@ function syncControls() {
   $('text').disabled = !s.textOn;
   $('radius').disabled = !s.radiusOn;
   $('label').disabled = !s.showLabel;
-  $('bars').disabled = !s.eq;
+  $('eq').disabled = s.still;
+  $('bars').disabled = !s.eq || s.still;
   $('next').disabled = $('toggle').disabled = !s.demo;
   $('demo').disabled = EMBEDDED;
   stage.classList.toggle('checker', s.checker);

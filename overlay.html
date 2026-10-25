@@ -346,9 +346,9 @@
   body.cs #fill { background: #fff; }
 
   /* theme=faceit: the FaceitWatcher overlay layout. Round avatar-style cover
-     with an orange ring, bold name, a level-style gauge (here: how loud the music is)
-     next to the artist, grey uppercase label on the right, full-width pill
-     progress bar with values underneath. #14161a at 85%, 12px radius, Geist. */
+     with an orange ring, bold name with the artist below it, grey uppercase
+     label on the right, full-width pill progress bar with values underneath.
+     #14161a at 85%, 12px radius, Geist. */
   body.faceit { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --bar-round: 4; --cap: rgba(255,255,255,0); --frost: 0; }
   body.faceit #card {
     display: grid; width: 420px; box-sizing: border-box; padding: 16px;
@@ -361,12 +361,9 @@
   body.faceit #art-wrap { grid-area: 1 / 1 / 3 / 2; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 0 0 2px var(--accent); }
   body.faceit #title { grid-area: 1 / 2; margin: 0; font-size: 22px; font-weight: 700; line-height: 1.1; align-self: start; margin-top: -5px; }
   body.faceit #artist {
-    grid-area: 2 / 2; align-self: center; margin: 0 0 0 38px;
+    grid-area: 2 / 2; align-self: center; margin: 0;
     font-size: 17px; font-weight: 700; color: #fff;
   }
-  #lvl { display: none; }
-  body.faceit #lvl { display: block; grid-area: 2 / 2; align-self: center; width: 30px; height: 30px; }
-  body.faceit #lvl svg { display: block; width: 100%; height: 100%; }
   body.faceit #label {
     grid-area: 1 / 3; justify-self: end; margin-top: 2px;
     color: #9aa0a6; font-size: 11px; font-weight: 400; letter-spacing: .05em;
@@ -427,7 +424,6 @@
   body.compact.faceit #art-wrap { width: 40px; height: 40px; }
   body.compact.faceit #title { margin-top: 0; font-size: 17px; }
   body.compact.faceit #artist { margin: 0; font-size: 15px; color: #9aa0a6; font-weight: 400; }
-  body.compact.faceit #lvl { display: none; }
   body.compact.faceit #eq { width: 54px; height: 26px; }
   body.compact.lol #card { padding: 10px 22px 10px 12px; }
   body.compact.lol #art-wrap, body.compact.cs #art-wrap,
@@ -446,6 +442,13 @@
   body.custom-font #card, body.custom-font #card * { font-family: var(--custom-font) !important; }
   body.no-label #label, body.no-cover #art-wrap, body.no-eq #eq { display: none !important; }
   body.no-eq.truedamage #bar { visibility: visible; }
+  body.no-eq:not(.faceit):not(.compact) #progress { margin-top: auto; }
+  body.no-eq.faceit #artist { grid-column: 2 / 4; }
+
+  /* ---- still=1: nothing moves. No equalizer, no scrolling text (long names
+     end in "…"), no spinning record, no fades; progress ticks once a second. */
+  body.still *, body.still *::before, body.still *::after { animation: none !important; transition: none !important; }
+  body.still .marquee span { display: block; padding-right: 0; overflow: hidden; text-overflow: ellipsis; }
 
   /* ---- card=0 works in every theme: drop the panel, keep the content ------
      Placed last so it wins over each theme's own card rules. */
@@ -476,7 +479,6 @@
   <div id="info">
     <div id="label">Now Playing</div>
     <div id="title" class="marquee"><span></span></div>
-    <div id="lvl"></div>
     <div id="artist" class="marquee"><span></span></div>
     <canvas id="eq"></canvas>
     <div id="progress"><span id="cur">0:00</span><div id="bar"><div id="fill"></div></div><span id="dur">0:00</span></div>
@@ -501,7 +503,8 @@ const opt = {
   showLabel: q.get('showLabel') !== '0',
   album: q.get('album') !== '0',
   cover: q.get('cover') !== '0',
-  eq: q.get('eq') !== '0',
+  still: q.get('still') === '1',      // no animations at all
+  eq: q.get('eq') !== '0' && q.get('still') !== '1',
   demo: q.get('demo') === '1',        // built-in demo songs, for previews and the editor
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
@@ -546,6 +549,7 @@ if (opt.font) {
 bc.toggle('no-label', !opt.showLabel);
 bc.toggle('no-cover', !opt.cover);
 bc.toggle('no-eq', !opt.eq);
+bc.toggle('still', opt.still);
 if (opt.accent) {
   // A fixed color also replaces the cover as the source of the card tint.
   setAccent('#' + opt.accent.replace('#', ''), opt.accent2 ? '#' + opt.accent2.replace('#', '') : undefined);
@@ -563,6 +567,7 @@ function setMarquee(el, text) {
   if (span.textContent === text) return;
   span.textContent = text;
   el.classList.remove('scroll');
+  if (opt.still) return;
   requestAnimationFrame(() => {
     const overflow = span.scrollWidth - el.clientWidth;
     if (overflow > 0) {
@@ -677,15 +682,6 @@ function draw(now) {
   if (playing && now - lastBands > 1500) simulate(now / 1000);
   else if (!playing) target.fill(0);
 
-  if (opt.theme === 'faceit') {
-    // The badge shows how loud the music is right now: level 1 when quiet or
-    // paused, level 10 at full volume. Smoothed so the number doesn't flicker.
-    let sum = 0;
-    for (let i = 0; i < opt.bars; i++) sum += target[i];
-    loudness += (sum / opt.bars - loudness) * .06;
-    setLevel(Math.ceil(Math.min(1, loudness / .55) * 10));
-  }
-
   const styles = getComputedStyle(document.body);
   const grad = g.createLinearGradient(0, h, 0, 0);
   grad.addColorStop(0, styles.getPropertyValue('--bar1'));
@@ -716,7 +712,8 @@ function draw(now) {
   }
 
   if (track && track.duration) {
-    const pos = Math.min(track.duration, track.position + (playing ? (now - trackAt) / 1000 : 0));
+    let pos = Math.min(track.duration, track.position + (playing ? (now - trackAt) / 1000 : 0));
+    if (opt.still) pos = Math.floor(pos);
     $('fill').style.width = (pos / track.duration * 100) + '%';
     document.body.style.setProperty('--p', (pos / track.duration * 100).toFixed(2));
     $('cur').textContent = fmt(pos);
@@ -725,25 +722,6 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
-
-// FACEIT level badge (same drawing as FaceitWatcher), used as a volume meter.
-let shownLevel = 0, loudness = 0;
-function setLevel(level) {
-  const n = Math.min(10, Math.max(1, level || 1));
-  if (n === shownLevel) return;
-  shownLevel = n;
-  const color = n >= 10 ? '#fe1f00' : n >= 8 ? '#ff6309' : n >= 4 ? '#ffc800' : n >= 2 ? '#1ce400' : '#eeeeee';
-  const arc = (r, from, sweep) => {
-    const pt = d => { const a = d * Math.PI / 180; return `${(50 + r * Math.sin(a)).toFixed(2)} ${(50 - r * Math.cos(a)).toFixed(2)}`; };
-    return `M ${pt(from)} A ${r} ${r} 0 ${sweep > 180 ? 1 : 0} 1 ${pt(from + sweep)}`;
-  };
-  $('lvl').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="48" fill="#1f2125" stroke="#2c2f34" stroke-width="2"/>
-    <path d="${arc(36, 225, 270)}" fill="none" stroke="#3a3d42" stroke-width="9"/>
-    <path d="${arc(36, 225, 27 * n)}" fill="none" stroke="${color}" stroke-width="9"/>
-    <text x="50" y="51" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif"
-      font-weight="700" font-size="${n === 10 ? 32 : 38}" fill="${color}">${n}</text></svg>`;
-}
 
 // True Damage: bars up to the playhead glow magenta to cyan, the rest stay
 // dim, over a red-to-gold progress line with a round marker.
