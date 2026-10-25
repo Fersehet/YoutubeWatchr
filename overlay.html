@@ -273,8 +273,11 @@
   body.compact #eq { order: -1; flex: none; width: 54px; height: 26px; margin: 0; }
   body.compact #label, body.compact #progress { display: none; }
   /* fixed width: long names scroll inside instead of resizing the pill */
-  body.compact #title { font-size: 17px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 62%; }
-  body.compact #artist { font-size: 15px; margin: 0; flex: 1 1 0; min-width: 40px; }
+  /* title and artist share one text size (--cfs, set per theme) so they line up */
+  body.compact { --cfs: 17px; }
+  html body.compact #title, html body.compact #artist { font-size: var(--cfs); line-height: 1.25; margin: 0; } /* html: beats each theme's own sizes */
+  body.compact #title { margin: 0; flex: 0 1 auto; min-width: 0; max-width: 62%; }
+  body.compact #artist { margin: 0; flex: 1 1 0; min-width: 40px; }
   body.compact #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
   body.compact .marquee span { padding-right: 0; }
   body.compact #card::before, body.compact #card::after { border-radius: 999px; }
@@ -285,13 +288,13 @@
   body.compact.vinyl #vinyl { top: 3px; left: 3px; width: 34px; height: 34px; }
   body.compact.vinyl.no-progress #vinyl { top: 0; left: 0; width: 40px; height: 40px; }
   body.compact.vinyl #tonearm { display: none; }
-  body.compact.vinyl #title { font-size: 18px; }
+  body.compact.vinyl { --cfs: 18px; }
   /* retro: keep the deck's square edges and LCD strip */
   body.compact.retro #card { border-radius: 6px; padding: 8px; }
   body.compact.retro #art-wrap { margin: 0; box-shadow: none; }
   body.compact.retro #info { padding: 6px 12px; }
-  body.compact.retro #title { font-size: 24px; }
-  body.compact.retro #artist { font-size: 18px; border-left-color: rgba(255,255,255,.15); }
+  body.compact.retro { --cfs: 20px; }
+  body.compact.retro #artist { border-left-color: rgba(255,255,255,.15); }
   body.compact.retro #eq { height: 28px; }
 
   /* ---- game-inspired themes: brand palettes, no logos ---------------------
@@ -413,7 +416,6 @@
   body.truedamage #progress { color: #a09b8c; }
   body.compact.truedamage #card { border-radius: 2px; }
   body.compact.truedamage #vinyl { box-shadow: 0 0 0 2px var(--accent); }
-  body.compact.truedamage #title { font-size: 17px; }
   body.compact.truedamage #eq { flex: none; min-height: 0; width: 70px; height: 30px; }
 
   /* compact versions keep the hard edges */
@@ -422,15 +424,14 @@
   body.compact.faceit #card { display: inline-flex; width: var(--cw, 460px); padding: 10px 20px 10px 10px; }
   body.compact.faceit #info { display: flex; }
   body.compact.faceit #art-wrap { width: 40px; height: 40px; }
-  body.compact.faceit #title { margin-top: 0; font-size: 17px; }
-  body.compact.faceit #artist { margin: 0; font-size: 15px; color: #9aa0a6; font-weight: 400; }
+  body.compact.faceit #title, body.compact.faceit #artist { align-self: center; }
+  body.compact.faceit #artist { margin: 0; color: #9aa0a6; font-weight: 400; }
   body.compact.faceit #eq { width: 54px; height: 26px; }
   body.compact.lol #card { padding: 10px 22px 10px 12px; }
   body.compact.lol #art-wrap, body.compact.cs #art-wrap,
   body.compact.lol #art-wrap img, body.compact.cs #art-wrap img { border-radius: 0; }
   body.compact.lol #art-wrap, body.compact.faceit #art-wrap { box-shadow: none; }
-  body.compact.lol #title { font-size: 17px; }
-  body.compact.cs #title { font-size: 21px; }
+  body.compact.cs { --cfs: 19px; }
   body.compact.faceit #card { border-radius: 12px; }
 
   /* ---- custom overrides from the editor (?bg=, ?text=, ?radius=, ?font=) --
