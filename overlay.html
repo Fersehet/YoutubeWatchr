@@ -346,7 +346,7 @@
   body.cs #fill { background: #fff; }
 
   /* theme=faceit: the FaceitWatcher overlay layout. Round avatar-style cover
-     with an orange ring, bold name, a level-style gauge (here: track progress)
+     with an orange ring, bold name, a level-style gauge (here: how loud the music is)
      next to the artist, grey uppercase label on the right, full-width pill
      progress bar with values underneath. #14161a at 85%, 12px radius, Geist. */
   body.faceit { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --bar-round: 4; --cap: rgba(255,255,255,0); --frost: 0; }
@@ -677,6 +677,15 @@ function draw(now) {
   if (playing && now - lastBands > 1500) simulate(now / 1000);
   else if (!playing) target.fill(0);
 
+  if (opt.theme === 'faceit') {
+    // The badge shows how loud the music is right now: level 1 when quiet or
+    // paused, level 10 at full volume. Smoothed so the number doesn't flicker.
+    let sum = 0;
+    for (let i = 0; i < opt.bars; i++) sum += target[i];
+    loudness += (sum / opt.bars - loudness) * .06;
+    setLevel(Math.ceil(Math.min(1, loudness / .55) * 10));
+  }
+
   const styles = getComputedStyle(document.body);
   const grad = g.createLinearGradient(0, h, 0, 0);
   grad.addColorStop(0, styles.getPropertyValue('--bar1'));
@@ -710,7 +719,6 @@ function draw(now) {
     const pos = Math.min(track.duration, track.position + (playing ? (now - trackAt) / 1000 : 0));
     $('fill').style.width = (pos / track.duration * 100) + '%';
     document.body.style.setProperty('--p', (pos / track.duration * 100).toFixed(2));
-    if (opt.theme === 'faceit') setLevel(Math.ceil(pos / track.duration * 10));
     $('cur').textContent = fmt(pos);
     $('dur').textContent = fmt(track.duration);
   }
@@ -718,9 +726,8 @@ function draw(now) {
 }
 requestAnimationFrame(draw);
 
-// FACEIT level badge (same drawing as FaceitWatcher). The "level" climbs
-// from 1 to 10 as the song plays.
-let shownLevel = 0;
+// FACEIT level badge (same drawing as FaceitWatcher), used as a volume meter.
+let shownLevel = 0, loudness = 0;
 function setLevel(level) {
   const n = Math.min(10, Math.max(1, level || 1));
   if (n === shownLevel) return;
