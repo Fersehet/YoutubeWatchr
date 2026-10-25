@@ -15,6 +15,7 @@
     --cap: rgba(255,255,255,.85);
     --bar-round: 3;
     --bar-glow: 0;
+    --bar-seg: 0;
   }
   html, body { margin: 0; background: transparent; overflow: hidden; }
   body {
@@ -156,13 +157,123 @@
   body.glass #bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.22); }
   body.glass #fill { background: rgba(255,255,255,.95); box-shadow: 0 0 10px rgba(255,255,255,.6); border-radius: 3px; }
   body.glass #progress { color: rgba(255,255,255,.7); }
+
+  /* ---- theme=vinyl: record sliding out of its sleeve ----------------------
+     The cover is the sleeve and the record label; the record spins at 33 1/3
+     rpm while playing and the tonearm swings onto it. */
+  #vinyl, #tonearm { display: none; }
+  body.vinyl {
+    font-family: "Georgia", "Iowan Old Style", "Palatino Linotype", serif;
+    --bar1: #c2410c;
+    --bar2: #fbbf24;
+    --cap: rgba(255,236,200,.85);
+    --bar-round: 1;
+  }
+  body.vinyl #card {
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(38,26,20,.92), rgba(20,14,12,.92));
+    box-shadow: 0 10px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,220,170,.08);
+  }
+  body.vinyl #glow { opacity: .18; }
+  body.vinyl #art-wrap { width: 190px; overflow: visible; background: none; box-shadow: none; border-radius: 0; }
+  body.vinyl #art-wrap img { width: 128px; border-radius: 3px; z-index: 2; box-shadow: 4px 0 14px rgba(0,0,0,.6); }
+  body.vinyl #vinyl {
+    display: block; position: absolute; top: 4px; left: 62px; width: 120px; height: 120px; border-radius: 50%; z-index: 1;
+    background:
+      radial-gradient(circle, transparent 0 34%, rgba(255,255,255,.06) 34.5%, transparent 35.5%),
+      repeating-radial-gradient(circle, #141414 0 1.2px, #1d1d1d 1.6px 2.4px),
+      #111;
+    box-shadow: 0 4px 14px rgba(0,0,0,.6);
+    animation: spin 1.8s linear infinite;
+    transition: left .8s cubic-bezier(.2,.8,.2,1);
+  }
+  body.vinyl #vinyl::before {
+    /* light catching the grooves; counter-rotated so it stays put while the record spins */
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(from 30deg, transparent 0 10%, rgba(255,255,255,.13) 14%, transparent 20% 60%, rgba(255,255,255,.1) 64%, transparent 70%);
+    animation: spin 1.8s linear infinite reverse;
+  }
+  body.vinyl #vlabel {
+    position: absolute; inset: 33%; border-radius: 50%;
+    background: #b45309 center / cover;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.4);
+  }
+  body.vinyl #vlabel::after { content: ""; position: absolute; inset: 44%; border-radius: 50%; background: #0b0b0b; }
+  body.vinyl #card.paused #vinyl, body.vinyl #card.paused #vinyl::before { animation-play-state: paused; }
+  body.vinyl #card.paused #vinyl { left: 36px; }
+  body.vinyl #tonearm {
+    display: block; position: absolute; top: -8px; left: 172px; width: 6px; height: 92px; z-index: 3;
+    transform-origin: 3px 6px; transform: rotate(34deg);
+    background: linear-gradient(90deg, #9ca3af, #e5e7eb, #9ca3af); border-radius: 3px;
+    transition: transform .9s cubic-bezier(.3,.7,.2,1);
+  }
+  body.vinyl #tonearm::before { content: ""; position: absolute; top: -4px; left: -5px; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #6b7280 0 3px, #d1d5db 4px); }
+  body.vinyl #tonearm::after { content: ""; position: absolute; bottom: -6px; left: -3px; width: 12px; height: 16px; border-radius: 2px; background: #374151; transform: rotate(-20deg); }
+  body.vinyl #card.paused #tonearm { transform: rotate(0deg); }
+  body.vinyl #label { color: #fbbf24; font-family: "Segoe UI", system-ui, sans-serif; }
+  body.vinyl #label::before { background: #fbbf24; box-shadow: 0 0 8px #f59e0b; }
+  body.vinyl #title { font-size: 23px; font-style: italic; color: #fff7ed; }
+  body.vinyl #artist { color: rgba(255,237,213,.7); }
+  body.vinyl #fill { background: linear-gradient(90deg, #c2410c, #fbbf24); }
+  body.vinyl #progress { font-family: "Segoe UI", system-ui, sans-serif; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- theme=retro: hi-fi deck LCD with segmented level meters ------------ */
+  body.retro {
+    font-family: "VT323", "Consolas", "Courier New", monospace;
+    --bar1: #39ff88; --bar2: #39ff88;
+    --cap: #ff4d4d;
+    --bar-seg: 2;
+  }
+  body.retro #card {
+    border-radius: 6px; padding: 14px;
+    background: linear-gradient(180deg, #2b2d31, #17181b);
+    box-shadow: 0 10px 30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px #000;
+  }
+  body.retro #glow { display: none; }
+  body.retro #art-wrap { width: 116px; height: 116px; margin: 6px; border-radius: 2px; box-shadow: 0 0 0 3px #0a0c0b, 0 0 0 4px #3a3d42; }
+  body.retro #art-wrap img { filter: contrast(1.15) saturate(.8); }
+  body.retro #art-wrap::after {
+    content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+  }
+  body.retro #info {
+    padding: 8px 12px; border-radius: 3px;
+    background: radial-gradient(120% 140% at 30% 0%, #0f2a1c, #06120c 70%);
+    box-shadow: inset 0 0 0 2px #000, inset 0 0 18px rgba(57,255,136,.12);
+    text-shadow: 0 0 6px rgba(57,255,136,.7);
+  }
+  body.retro #info::after {
+    content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  }
+  body.retro #label { color: #39ff88; font-size: 15px; letter-spacing: .12em; font-weight: 400; }
+  body.retro #label::before { width: 8px; height: 8px; border-radius: 0; background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; }
+  body.retro #title { font-size: 28px; font-weight: 400; margin-top: 0; line-height: 1.05; color: #b8ffd5; text-transform: uppercase; }
+  body.retro #artist { font-size: 19px; color: #5fdc98; margin-top: 0; text-transform: uppercase; }
+  body.retro #eq { flex: none; height: 40px; }
+  body.retro #progress { font-size: 16px; color: #5fdc98; }
+  body.retro #bar { height: 6px; border-radius: 0; background: #0b2417; }
+  body.retro #fill { background: repeating-linear-gradient(90deg, #39ff88 0 4px, transparent 4px 6px); box-shadow: 0 0 6px rgba(57,255,136,.6); }
+
+  /* ---- theme=minimal: one-line lower third ------------------------------- */
+  body.minimal { --bar-round: 1; --cap: rgba(255,255,255,0); }
+  body.minimal #card { display: inline-flex; width: auto; max-width: 588px; padding: 10px 20px 10px 10px; border-radius: 999px; gap: 12px; align-items: center; }
+  body.minimal #art-wrap { width: 40px; height: 40px; border-radius: 50%; box-shadow: none; }
+  body.minimal #info { flex-direction: row; align-items: center; gap: 12px; }
+  body.minimal #eq { order: -1; flex: none; width: 54px; height: 26px; margin: 0; }
+  body.minimal #label, body.minimal #progress { display: none; }
+  body.minimal #title { font-size: 17px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 300px; }
+  body.minimal #artist { font-size: 15px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 190px; }
+  body.minimal #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
+  body.minimal .marquee span { padding-right: 0; }
 </style>
 </head>
 <body>
 <div id="card">
   <div id="frost"></div>
   <div id="glow"></div>
-  <div id="art-wrap"><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
+  <div id="art-wrap"><div id="vinyl"><div id="vlabel"></div></div><div id="tonearm"></div><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
   <div id="info">
     <div id="label">Now Playing</div>
     <div id="title" class="marquee"><span></span></div>
@@ -176,15 +287,20 @@
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
 const q = new URLSearchParams(location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass
-  bars: +q.get('bars') || 32,
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | minimal
+  bars: +q.get('bars') || (q.get('theme') === 'minimal' ? 7 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
 };
-document.body.classList.toggle('glass', opt.theme === 'glass');
+if (['glass', 'vinyl', 'retro', 'minimal'].includes(opt.theme)) document.body.classList.add(opt.theme);
+if (opt.theme === 'retro') {
+  const f = document.createElement('link');
+  f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=VT323&display=swap';
+  document.head.appendChild(f);
+}
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
@@ -217,7 +333,7 @@ function setArt(url) {
   const img = artBack;
   img.onload = () => {
     img.style.opacity = 1;
-    $('frost').style.backgroundImage = `url("${url}")`;
+    $('frost').style.backgroundImage = $('vlabel').style.backgroundImage = `url("${url}")`;
     artFront.style.opacity = 0;
     [artFront, artBack] = [img, artFront];
     if (!opt.accent) pickAccent(url);
@@ -321,15 +437,17 @@ function draw(now) {
   const round = +styles.getPropertyValue('--bar-round') || 0;
   const glow = +styles.getPropertyValue('--bar-glow') || 0;
   const cap = styles.getPropertyValue('--cap');
+  const seg = +styles.getPropertyValue('--bar-seg') || 0;
   g.shadowColor = 'rgba(255,255,255,.55)';
 
-  const gap = 3, bw = (w - gap * (opt.bars - 1)) / opt.bars;
+  const gap = Math.min(3, w / opt.bars * .3), bw = (w - gap * (opt.bars - 1)) / opt.bars;
   for (let i = 0; i < opt.bars; i++) {
     // Fast attack, slower release, falling peak caps.
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
     peak[i] = Math.max(level[i], peak[i] - .012);
     const x = i * (bw + gap);
     const bh = Math.max(2, level[i] * (h - 6));
+    if (seg) { drawSegments(x, bw, h, level[i], peak[i], seg, cap); continue; }
     g.fillStyle = grad;
     g.shadowBlur = glow;
     g.beginPath(); g.roundRect(x, h - bh, bw, bh, Math.min(round, bw / 2)); g.fill();
@@ -347,6 +465,19 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
+
+// LED-style meter: lit segments go green, amber, red with height.
+function drawSegments(x, bw, h, lvl, pk, seg, cap) {
+  const step = seg + 2, n = Math.floor(h / step), lit = Math.round(lvl * n), top = Math.min(n - 1, Math.round(pk * n));
+  for (let k = 0; k < n; k++) {
+    const f = k / n, on = k < lit;
+    g.fillStyle = on ? (f > .85 ? '#ff4d4d' : f > .62 ? '#ffd23f' : '#39ff88') : 'rgba(57,255,136,.07)';
+    g.shadowBlur = on ? 6 : 0; g.shadowColor = g.fillStyle;
+    g.fillRect(x, h - (k + 1) * step + 2, bw, seg);
+  }
+  g.shadowBlur = 0;
+  if (top > 0) { g.fillStyle = cap; g.fillRect(x, h - (top + 1) * step + 2, bw, seg); }
+}
 
 // ---- connection -------------------------------------------------------------
 const es = new EventSource((opt.server || '') + '/events');

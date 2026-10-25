@@ -24,7 +24,7 @@ The userscript reads the track info and taps the player's audio with the Web Aud
 
 | Option | Example | Effect |
 |---|---|---|
-| `theme` | `?theme=glass` | `classic` (default) or `glass`, an Apple-style liquid glass card tinted by the album cover |
+| `theme` | `?theme=vinyl` | `classic` (default), `glass` (Apple-style liquid glass tinted by the cover), `vinyl` (spinning record with the cover as its label), `retro` (hi-fi LCD with LED level meters) or `minimal` (one-line pill) |
 | `bars` | `?bars=24` | Number of equalizer bars (default 32) |
 | `accent` | `?accent=00e5ff` | Fixed color instead of one picked from the cover |
 | `hidePaused` | `?hidePaused=1` | Fade the overlay out while paused |
