@@ -1,7 +1,7 @@
 # YoutubeWatcher
 
+Lightweight OBS overlay that shows what you're listening to on YouTube Music.
 
-YT Music → OBS Now Playing overlay.
 Shows the song you're playing on music.youtube.com in OBS: cover art, title, artist, progress bar and an animated equalizer driven by the real audio.
 
 ## How it works
