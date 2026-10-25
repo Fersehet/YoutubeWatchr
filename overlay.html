@@ -512,6 +512,9 @@ const opt = {
   scale: Math.min(3, Math.max(.3, +q.get('scale') || 1)), // overall size, 1 = default
   width: +q.get('width') || 0,         // compact pill width in px (default 460)
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
+  obs: q.get('obs') === '1',          // get the music from the browser extension through OBS WebSocket
+  port: +q.get('port') || 4455,       // OBS WebSocket port
+  pw: q.get('pw') || '',              // OBS WebSocket password
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
@@ -772,10 +775,40 @@ function drawSegments(x, bw, h, lvl, pk, seg, cap, styles) {
 
 // ---- connection -------------------------------------------------------------
 if (opt.demo) startDemo();
+else if (opt.obs) connectObs();
 else {
   const es = new EventSource((opt.server || '') + '/events');
   es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
   es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
+}
+
+// No server: the browser extension broadcasts the music as an OBS WebSocket
+// custom event (protocol v5), and we listen for it on the same socket.
+function connectObs() {
+  const sha = async s => btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))));
+  let delay = 1000;
+  (function open() {
+    const ws = new WebSocket('ws://127.0.0.1:' + opt.port);
+    ws.onmessage = async e => {
+      const m = JSON.parse(e.data);
+      if (m.op === 0) { // Hello
+        const id = { rpcVersion: 1, eventSubscriptions: 1 }; // 1 = General, which has CustomEvent
+        const a = m.d.authentication;
+        if (a) id.authentication = await sha(await sha(opt.pw + a.salt) + a.challenge);
+        ws.send(JSON.stringify({ op: 1, d: id }));
+      } else if (m.op === 2) delay = 1000; // Identified
+      else if (m.op === 5 && m.d.eventType === 'CustomEvent') {
+        const d = m.d.eventData;
+        if (!d || d.ytw !== 1) return;
+        if (d.track) onTrack(d.track);
+        if (d.bands) onBands(d.bands);
+      }
+    };
+    ws.onclose = e => {
+      if (e.code === 4009) console.warn('[YoutubeWatcher] wrong OBS WebSocket password (pw=)');
+      setTimeout(open, delay = Math.min(delay * 2, 10000));
+    };
+  })();
 }
 
 // ---- demo mode ---------------------------------------------------------------

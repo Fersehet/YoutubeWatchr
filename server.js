@@ -55,7 +55,7 @@ http.createServer((req, res) => {
     return fs.createReadStream(path.join(__dirname, 'docs', 'logo', 'favicon.svg')).pipe(res);
   }
 
-  if (req.url === '/' || req.url.startsWith('/?')) {
+  if (req.url === '/' || req.url.startsWith('/?') || req.url === '/overlay.html' || req.url.startsWith('/overlay.html?')) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return fs.createReadStream(path.join(__dirname, 'overlay.html')).pipe(res);
   }

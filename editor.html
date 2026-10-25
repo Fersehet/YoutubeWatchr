@@ -107,7 +107,7 @@
   .inline output { font: 12px var(--mono); color: var(--muted); min-width: 44px; text-align: right; }
   input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
   input[type=color] { width: 38px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
-  input[type=text], select {
+  input[type=text], input[type=password], select {
     width: 100%; min-width: 0; font: 14px var(--body); color: var(--fg); background: var(--panel2);
     border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px;
   }
@@ -117,7 +117,7 @@
     font: 500 14px var(--body); color: var(--fg); background: var(--panel2); border: 1px solid var(--line);
     border-radius: 7px; padding: 7px 12px; cursor: pointer;
   }
-  button:hover, select:hover, input[type=text]:hover { border-color: var(--muted); }
+  button:hover, select:hover, input[type=text]:hover, input[type=password]:hover { border-color: var(--muted); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
@@ -126,6 +126,7 @@
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
   .seg button { border: 0; border-radius: 0; padding: 6px 10px; font-size: 13px; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  [hidden] { display: none !important; }
   .note { font-size: 12px; color: var(--muted); margin: -4px 0 0; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -162,11 +163,24 @@
           <code id="url">http://127.0.0.1:8974/</code>
           <button class="primary" id="copy" type="button">Copy URL</button>
         </div>
-        <p class="hint">OBS Browser Source size: <b id="size">620 × 200</b>. Clear the source's Custom CSS.</p>
+        <p class="hint">OBS Browser Source size: <b id="size">620 × 200</b>. <span id="obs-hint">Untick <b>Local file</b>, paste the URL and</span> <span id="css-hint">Clear</span> the source's Custom CSS.</p>
       </div>
     </div>
 
     <aside>
+      <fieldset>
+        <legend>Connection</legend>
+        <div class="row"><span>Music from</span>
+          <div class="seg" role="group" aria-label="Where the music comes from">
+            <button type="button" data-conn="obs" aria-pressed="false">Extension</button>
+            <button type="button" data-conn="server" aria-pressed="true">Server</button>
+          </div>
+        </div>
+        <div class="row obs-row"><span>OBS port</span><input type="text" id="obsPort" inputmode="numeric" placeholder="4455" aria-label="OBS WebSocket port"></div>
+        <div class="row obs-row"><span>Password</span><input type="password" id="obsPw" autocomplete="off" placeholder="Empty if authentication is off" aria-label="OBS WebSocket password"></div>
+        <p class="note obs-row">The same as in the extension. In OBS: Tools → WebSocket Server Settings.</p>
+      </fieldset>
+
       <fieldset>
         <legend>Theme</legend>
         <div class="themes" id="themes"></div>
@@ -274,11 +288,21 @@ const DEFAULTS = {
   showLabel: true, label: 'Now Playing', font: '', album: true, cover: true,
   eq: true, bars: 32, progress: true, hidePaused: false,
   demo: true, checker: false,
+  conn: 'server', obsPort: 4455, obsPw: '',
 };
 const KEY = 'ytw-editor';
 // When this page is the online preview, the overlay is embedded (no local server).
 const EMBEDDED = typeof window.OVERLAY_SRC === 'string';
-const BASE = EMBEDDED ? 'http://127.0.0.1:8974/' : location.origin + '/';
+// Served by server.js at /editor, or opened as a file (or from any static host).
+const SERVED = !EMBEDDED && location.pathname === '/editor';
+if (!SERVED && !EMBEDDED) DEFAULTS.conn = 'obs';
+
+// Where OBS loads the overlay from: the local server, or overlay.html next to this file.
+function base() {
+  if (state.conn === 'server') return SERVED ? location.origin + '/' : 'http://127.0.0.1:8974/';
+  if (EMBEDDED) return 'file:///…/YoutubeWatcher/overlay.html';
+  return new URL('overlay.html', location.href).href;
+}
 
 let state = { ...DEFAULTS };
 try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
@@ -310,6 +334,11 @@ function params(forObs) {
   else if (s.bars !== (s.compact ? 7 : s.theme === 'faceit' ? 12 : 32)) p.set('bars', s.bars);
   if (!s.progress) p.set('progress', '0');
   if (s.hidePaused) p.set('hidePaused', '1');
+  if (s.conn === 'obs') {
+    p.set('obs', '1');
+    if (s.obsPort !== 4455) p.set('port', s.obsPort);
+    if (s.obsPw) p.set('pw', s.obsPw);
+  } else if (!forObs && !SERVED && !s.demo) p.set('server', 'http://127.0.0.1:8974');
   if (!forObs && s.demo) p.set('demo', '1');
   const str = p.toString();
   return str ? '?' + str : '';
@@ -321,10 +350,12 @@ function obsSize() {
   return [Math.ceil(w * state.scale), Math.ceil(h * state.scale)];
 }
 
-let reloadTimer = 0;
+let reloadTimer = 0, obsUrl = '';
 function render() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
-  $('url').textContent = BASE + params(true);
+  obsUrl = base() + params(true);
+  // don't show the password on screen, the copied URL has it
+  $('url').textContent = state.obsPw ? obsUrl.replace('pw=' + encodeURIComponent(state.obsPw), 'pw=' + '•'.repeat(8)) : obsUrl;
   const [w, h] = obsSize();
   $('size').textContent = `${w} × ${h}`;
   syncControls();
@@ -332,7 +363,7 @@ function render() {
   reloadTimer = setTimeout(() => {
     const q = params(false);
     if (EMBEDDED) ov.srcdoc = '<script>window.DEMO_QUERY=' + JSON.stringify(q || '?') + '<\/script>' + window.OVERLAY_SRC;
-    else ov.src = '/' + q;
+    else ov.src = 'overlay.html' + q;
     $('toggle').textContent = 'Pause';
     fit();
   }, 150);
@@ -362,6 +393,9 @@ document.querySelectorAll('[data-compact]').forEach(b => b.onclick = () => {
   render();
 });
 document.querySelectorAll('[data-accentmode]').forEach(b => b.onclick = () => { state.accentMode = b.dataset.accentmode; render(); });
+document.querySelectorAll('[data-conn]').forEach(b => b.onclick = () => { state.conn = b.dataset.conn; render(); });
+$('obsPort').oninput = e => { state.obsPort = Math.min(65535, Math.max(1, +e.target.value || 4455)); render(); };
+$('obsPw').oninput = e => { state.obsPw = e.target.value; render(); };
 
 const checks = ['still', 'textOn', 'card', 'bgOn', 'radiusOn', 'showLabel', 'album', 'cover', 'eq', 'progress', 'hidePaused', 'demo', 'checker'];
 checks.forEach(id => $(id).onchange = e => { state[id] = e.target.checked; render(); });
@@ -376,6 +410,12 @@ function syncControls() {
   themesEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.theme === s.theme));
   document.querySelectorAll('[data-compact]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.compact === '1') === s.compact));
   document.querySelectorAll('[data-accentmode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.accentmode === s.accentMode));
+  document.querySelectorAll('[data-conn]').forEach(b => b.setAttribute('aria-pressed', b.dataset.conn === s.conn));
+  document.querySelectorAll('.obs-row').forEach(el => { el.hidden = s.conn !== 'obs'; });
+  if (document.activeElement !== $('obsPort')) $('obsPort').value = s.obsPort === 4455 ? '' : s.obsPort;
+  if ($('obsPw').value !== s.obsPw) $('obsPw').value = s.obsPw;
+  $('obs-hint').hidden = s.conn !== 'obs';
+  $('css-hint').textContent = s.conn === 'obs' ? 'clear' : 'Clear';
   checks.forEach(id => { $(id).checked = s[id]; });
   ['accent', 'accent2', 'text', 'bg'].forEach(id => { if ($(id).value !== s[id]) $(id).value = s[id]; });
   ['width', 'scale', 'bgAlpha', 'radius', 'bars'].forEach(id => { $(id).value = s[id]; });
@@ -408,12 +448,12 @@ $('toggle').onclick = e => {
 };
 $('reset').onclick = () => { state = { ...DEFAULTS }; render(); };
 $('copy').onclick = e => {
-  const text = $('url').textContent;
+  const text = obsUrl;
   const done = () => { e.target.textContent = 'Copied'; setTimeout(() => e.target.textContent = 'Copy URL', 1500); };
   const select = () => { const r = document.createRange(); r.selectNodeContents($('url')); getSelection().removeAllRanges(); getSelection().addRange(r); };
   try { navigator.clipboard.writeText(text).then(done, select); } catch { select(); }
 };
-if (EMBEDDED) $('mode-note').textContent = 'Online preview with demo songs. Run the local server to use this editor with your own music.';
+if (EMBEDDED) $('mode-note').textContent = 'Online preview with demo songs. Download YoutubeWatcher and open editor.html to use it with your own music.';
 
 // ---- mock scene ------------------------------------------------------------------
 const cv = $('scene'), g = cv.getContext('2d');
