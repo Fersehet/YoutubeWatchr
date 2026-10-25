@@ -202,14 +202,14 @@
   body.vinyl #vlabel::after { content: ""; position: absolute; inset: 44%; border-radius: 50%; background: #0b0b0b; }
   body.vinyl #card.paused #vinyl, body.vinyl #card.paused #vinyl::before { animation-play-state: paused; }
   body.vinyl #tonearm {
-    display: block; position: absolute; top: -8px; left: 140px; width: 6px; height: 92px; z-index: 3;
-    transform-origin: 3px 6px; transform: rotate(34deg);
-    background: linear-gradient(90deg, #9ca3af, #e5e7eb, #9ca3af); border-radius: 3px;
+    /* SVG arm; pivot sits just off the record's top-right, needle lands on the grooves */
+    display: block; position: absolute; left: 92px; top: -8px; width: 70px; height: 116px; z-index: 3;
+    transform-origin: 50px 14px; transform: rotate(0deg);
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,.55));
     transition: transform .9s cubic-bezier(.3,.7,.2,1);
   }
-  body.vinyl #tonearm::before { content: ""; position: absolute; top: -4px; left: -5px; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #6b7280 0 3px, #d1d5db 4px); }
-  body.vinyl #tonearm::after { content: ""; position: absolute; bottom: -6px; left: -3px; width: 12px; height: 16px; border-radius: 2px; background: #374151; transform: rotate(-20deg); }
-  body.vinyl #card.paused #tonearm { transform: rotate(0deg); }
+  body.vinyl #tonearm svg { display: block; }
+  body.vinyl #card.paused #tonearm { transform: rotate(-26deg); }
   body.vinyl #label { color: var(--accent); font-family: "Segoe UI", system-ui, sans-serif; }
   body.vinyl #label::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
   body.vinyl #title { font-size: 23px; font-style: italic; color: #fff7ed; }
@@ -455,7 +455,14 @@
 <div id="card">
   <div id="frost"></div>
   <div id="glow"></div>
-  <div id="art-wrap"><div id="vinyl"><div id="vlabel"></div></div><div id="tonearm"></div><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
+  <div id="art-wrap"><div id="vinyl"><div id="vlabel"></div></div><div id="tonearm"><svg viewBox="0 0 70 116" width="70" height="116" aria-hidden="true">
+      <defs><linearGradient id="arm-metal" x1="0" x2="1"><stop offset="0" stop-color="#7d838d"/><stop offset=".5" stop-color="#f1f3f6"/><stop offset="1" stop-color="#7d838d"/></linearGradient></defs>
+      <rect x="51" y="-1" width="13" height="10" rx="2.5" transform="rotate(25 57 4)" fill="#262a31" stroke="#5a616c"/>
+      <path d="M50 14 L25 78 Q21 88 15 95" stroke="url(#arm-metal)" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+      <g transform="translate(13 99) rotate(32)"><rect x="-5" y="-5" width="10" height="12" rx="1.6" fill="#dfe2e7" stroke="#8a9099" stroke-width=".8"/><rect x="-3" y="6" width="6" height="4" rx=".8" fill="#1b1e23"/></g>
+      <circle cx="50" cy="14" r="11" fill="#1b1e23" stroke="#4d535d" stroke-width="1.5"/>
+      <circle cx="50" cy="14" r="5" fill="url(#arm-metal)"/>
+    </svg></div><img id="artA" alt=""><img id="artB" alt="" style="opacity:0"></div>
   <div id="info">
     <div id="label">Now Playing</div>
     <div id="title" class="marquee"><span></span></div>
