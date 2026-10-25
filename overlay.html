@@ -256,24 +256,42 @@
   body.retro #bar { height: 6px; border-radius: 0; background: rgba(255,255,255,.08); }
   body.retro #fill { background: repeating-linear-gradient(90deg, var(--accent) 0 4px, transparent 4px 6px); }
 
-  /* ---- theme=minimal: one-line lower third ------------------------------- */
-  body.minimal { --bar-round: 1; --cap: rgba(255,255,255,0); }
-  body.minimal #card { display: inline-flex; width: auto; max-width: 588px; padding: 10px 20px 10px 10px; border-radius: 999px; gap: 12px; align-items: center; }
-  body.minimal #art-wrap {
+  /* ---- compact=1: one-line pill, works with every theme -------------------
+     Progress shows as a ring around the round cover. */
+  body.compact { --cap: rgba(255,255,255,0); }
+  body.compact.classic { --bar-round: 1; }
+  body.compact #card { display: inline-flex; width: auto; max-width: 588px; padding: 10px 20px 10px 10px; border-radius: 999px; gap: 12px; align-items: center; }
+  body.compact #art-wrap {
     /* progress as a ring filling clockwise around the cover */
     width: 40px; height: 40px; border-radius: 50%; box-shadow: none;
     background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), rgba(255,255,255,.18) 0);
   }
-  body.minimal #art-wrap img { inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; }
-  body.minimal.no-progress #art-wrap { background: none; }
-  body.minimal.no-progress #art-wrap img { inset: 0; width: 100%; height: 100%; }
-  body.minimal #info { flex-direction: row; align-items: center; gap: 12px; }
-  body.minimal #eq { order: -1; flex: none; width: 54px; height: 26px; margin: 0; }
-  body.minimal #label, body.minimal #progress { display: none; }
-  body.minimal #title { font-size: 17px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 300px; }
-  body.minimal #artist { font-size: 15px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 190px; }
-  body.minimal #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
-  body.minimal .marquee span { padding-right: 0; }
+  body.compact #art-wrap img { inset: 3px; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; }
+  body.compact.no-progress #art-wrap { background: none; }
+  body.compact.no-progress #art-wrap img { inset: 0; width: 100%; height: 100%; }
+  body.compact #info { flex-direction: row; align-items: center; gap: 12px; }
+  body.compact #eq { order: -1; flex: none; width: 54px; height: 26px; margin: 0; }
+  body.compact #label, body.compact #progress { display: none; }
+  body.compact #title { font-size: 17px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 300px; }
+  body.compact #artist { font-size: 15px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 190px; }
+  body.compact #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
+  body.compact .marquee span { padding-right: 0; }
+  body.compact #card::before, body.compact #card::after { border-radius: 999px; }
+  /* glass: thinner rim on the pill */
+  body.compact.glass #card { padding: 8px 20px 8px 8px; }
+  /* vinyl: a small spinning record inside the ring */
+  body.compact.vinyl #art-wrap { overflow: hidden; }
+  body.compact.vinyl #vinyl { top: 3px; left: 3px; width: 34px; height: 34px; }
+  body.compact.vinyl.no-progress #vinyl { top: 0; left: 0; width: 40px; height: 40px; }
+  body.compact.vinyl #tonearm { display: none; }
+  body.compact.vinyl #title { font-size: 18px; }
+  /* retro: keep the deck's square edges and LCD strip */
+  body.compact.retro #card { border-radius: 6px; padding: 8px; }
+  body.compact.retro #art-wrap { margin: 0; box-shadow: none; }
+  body.compact.retro #info { padding: 6px 12px; }
+  body.compact.retro #title { font-size: 24px; }
+  body.compact.retro #artist { font-size: 18px; border-left-color: rgba(255,255,255,.15); }
+  body.compact.retro #eq { height: 28px; }
 
   /* ---- card=0 works in every theme: drop the panel, keep the content ------
      Placed last so it wins over each theme's own card rules. */
@@ -307,15 +325,18 @@
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
 const q = new URLSearchParams(location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | minimal
-  bars: +q.get('bars') || (q.get('theme') === 'minimal' ? 7 : 32),
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro ("minimal" = classic + compact)
+  compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
+  bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
 };
-if (['glass', 'vinyl', 'retro', 'minimal'].includes(opt.theme)) document.body.classList.add(opt.theme);
+if (opt.theme === 'minimal') opt.theme = 'classic';
+document.body.classList.add(['glass', 'vinyl', 'retro'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.toggle('compact', opt.compact);
 if (opt.theme === 'retro') {
   const f = document.createElement('link');
   f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=VT323&display=swap';
