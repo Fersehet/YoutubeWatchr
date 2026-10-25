@@ -99,7 +99,15 @@
      OBS browser sources can't see the scene behind them, so backdrop-filter
      would blur nothing. The "glass" is the cover itself, heavily blurred and
      saturated, under a bright specular rim. */
-  #frost { display: none; }
+  #frost {
+    /* every theme: a blurred copy of the cover tints the card */
+    position: absolute; inset: -30px;
+    background-size: cover; background-position: center;
+    filter: blur(34px) saturate(1.9) brightness(.85);
+    opacity: var(--frost, .3); transition: background-image .8s;
+    pointer-events: none;
+  }
+  body.no-card #frost { display: none; }
   body.glass {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
     --bar1: rgba(255,255,255,.4);
@@ -122,13 +130,7 @@
     -webkit-backdrop-filter: blur(24px) saturate(1.8);
   }
   body.glass #glow { display: none; }
-  body.glass #frost {
-    display: block; position: absolute; inset: -30px;
-    background-size: cover; background-position: center;
-    filter: blur(34px) saturate(1.9) brightness(.85);
-    opacity: .62; transition: background-image .8s;
-    pointer-events: none;
-  }
+  body.glass { --frost: .62; }
   body.glass #card::before {
     /* liquid tint + soft top light */
     content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
@@ -164,8 +166,8 @@
   #vinyl, #tonearm { display: none; }
   body.vinyl {
     font-family: "Georgia", "Iowan Old Style", "Palatino Linotype", serif;
-    --bar1: #c2410c;
-    --bar2: #fbbf24;
+    --bar1: var(--accent);
+    --bar2: var(--accent2);
     --cap: rgba(255,236,200,.85);
     --bar-round: 1;
   }
@@ -208,18 +210,19 @@
   body.vinyl #tonearm::before { content: ""; position: absolute; top: -4px; left: -5px; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle, #6b7280 0 3px, #d1d5db 4px); }
   body.vinyl #tonearm::after { content: ""; position: absolute; bottom: -6px; left: -3px; width: 12px; height: 16px; border-radius: 2px; background: #374151; transform: rotate(-20deg); }
   body.vinyl #card.paused #tonearm { transform: rotate(0deg); }
-  body.vinyl #label { color: #fbbf24; font-family: "Segoe UI", system-ui, sans-serif; }
-  body.vinyl #label::before { background: #fbbf24; box-shadow: 0 0 8px #f59e0b; }
+  body.vinyl #label { color: var(--accent); font-family: "Segoe UI", system-ui, sans-serif; }
+  body.vinyl #label::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
   body.vinyl #title { font-size: 23px; font-style: italic; color: #fff7ed; }
   body.vinyl #artist { color: rgba(255,237,213,.7); }
-  body.vinyl #fill { background: linear-gradient(90deg, #c2410c, #fbbf24); }
+  body.vinyl #vlabel { background-color: var(--accent); }
   body.vinyl #progress { font-family: "Segoe UI", system-ui, sans-serif; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
   /* ---- theme=retro: hi-fi deck LCD with segmented level meters ------------ */
   body.retro {
     font-family: "VT323", "Consolas", "Courier New", monospace;
-    --bar1: #39ff88; --bar2: #39ff88;
+    --bar1: var(--accent); --bar2: var(--accent2);
+    --frost: .25;
     --cap: #ff4d4d;
     --bar-seg: 2;
   }
@@ -237,22 +240,21 @@
   }
   body.retro #info {
     padding: 8px 12px; border-radius: 3px;
-    background: radial-gradient(120% 140% at 30% 0%, #0f2a1c, #06120c 70%);
-    box-shadow: inset 0 0 0 2px #000, inset 0 0 18px rgba(57,255,136,.12);
-    text-shadow: 0 0 6px rgba(57,255,136,.7);
+    background: radial-gradient(120% 140% at 30% 0%, rgba(20,24,22,.85), rgba(4,6,5,.92) 70%);
+    box-shadow: inset 0 0 0 2px #000;
   }
   body.retro #info::after {
     content: ""; position: absolute; inset: 0; border-radius: 3px; pointer-events: none;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
   }
-  body.retro #label { color: #39ff88; font-size: 15px; letter-spacing: .12em; font-weight: 400; }
+  body.retro #label { color: var(--accent); font-size: 15px; letter-spacing: .12em; font-weight: 400; }
   body.retro #label::before { width: 8px; height: 8px; border-radius: 0; background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; }
-  body.retro #title { font-size: 28px; font-weight: 400; margin-top: 0; line-height: 1.05; color: #b8ffd5; text-transform: uppercase; }
-  body.retro #artist { font-size: 19px; color: #5fdc98; margin-top: 0; text-transform: uppercase; }
+  body.retro #title { font-size: 28px; font-weight: 400; margin-top: 0; line-height: 1.05; color: #f4fff8; text-shadow: 0 0 6px var(--accent); text-transform: uppercase; }
+  body.retro #artist { font-size: 19px; color: var(--accent2); margin-top: 0; text-transform: uppercase; }
   body.retro #eq { flex: none; height: 40px; }
-  body.retro #progress { font-size: 16px; color: #5fdc98; }
-  body.retro #bar { height: 6px; border-radius: 0; background: #0b2417; }
-  body.retro #fill { background: repeating-linear-gradient(90deg, #39ff88 0 4px, transparent 4px 6px); box-shadow: 0 0 6px rgba(57,255,136,.6); }
+  body.retro #progress { font-size: 16px; color: var(--accent2); }
+  body.retro #bar { height: 6px; border-radius: 0; background: rgba(255,255,255,.08); }
+  body.retro #fill { background: repeating-linear-gradient(90deg, var(--accent) 0 4px, transparent 4px 6px); }
 
   /* ---- theme=minimal: one-line lower third ------------------------------- */
   body.minimal { --bar-round: 1; --cap: rgba(255,255,255,0); }
@@ -265,6 +267,19 @@
   body.minimal #artist { font-size: 15px; margin: 0; flex: 0 1 auto; min-width: 0; max-width: 190px; }
   body.minimal #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
   body.minimal .marquee span { padding-right: 0; }
+
+  /* ---- card=0 works in every theme: drop the panel, keep the content ------
+     Placed last so it wins over each theme's own card rules. */
+  body.no-card #card {
+    background: transparent; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  body.no-card #card::before, body.no-card #card::after,
+  body.no-card #info::after, body.no-card #frost, body.no-card #glow { display: none; }
+  body.no-card #info { background: transparent; box-shadow: none; }
+  body.no-card #title, body.no-card #artist, body.no-card #label, body.no-card #progress {
+    text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.5);
+  }
 </style>
 </head>
 <body>
@@ -445,7 +460,7 @@ function draw(now) {
     peak[i] = Math.max(level[i], peak[i] - .012);
     const x = i * (bw + gap);
     const bh = Math.max(2, level[i] * (h - 6));
-    if (seg) { drawSegments(x, bw, h, level[i], peak[i], seg, cap); continue; }
+    if (seg) { drawSegments(x, bw, h, level[i], peak[i], seg, cap, styles); continue; }
     g.fillStyle = grad;
     g.shadowBlur = glow;
     g.beginPath(); g.roundRect(x, h - bh, bw, bh, Math.min(round, bw / 2)); g.fill();
@@ -464,12 +479,13 @@ function draw(now) {
 }
 requestAnimationFrame(draw);
 
-// LED-style meter: lit segments go green, amber, red with height.
-function drawSegments(x, bw, h, lvl, pk, seg, cap) {
+// LED-style meter: lit segments go accent, second accent, red with height.
+function drawSegments(x, bw, h, lvl, pk, seg, cap, styles) {
+  const low = styles.getPropertyValue('--accent'), mid = styles.getPropertyValue('--accent2');
   const step = seg + 2, n = Math.floor(h / step), lit = Math.round(lvl * n), top = Math.min(n - 1, Math.round(pk * n));
   for (let k = 0; k < n; k++) {
     const f = k / n, on = k < lit;
-    g.fillStyle = on ? (f > .85 ? '#ff4d4d' : f > .62 ? '#ffd23f' : '#39ff88') : 'rgba(57,255,136,.07)';
+    g.fillStyle = on ? (f > .85 ? '#ff4d4d' : f > .62 ? mid : low) : 'rgba(255,255,255,.06)';
     g.shadowBlur = on ? 6 : 0; g.shadowColor = g.fillStyle;
     g.fillRect(x, h - (k + 1) * step + 2, bw, seg);
   }
