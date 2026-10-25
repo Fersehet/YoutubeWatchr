@@ -83,6 +83,7 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 | `width` | `?compact=1&width=380` | Width of the compact bar in pixels (default 460). Long names scroll inside |
 | `scale` | `?scale=1.5` | Make everything bigger or smaller (0.3 to 3). Multiply the OBS width and height by the same number |
 | `card` | `?card=0` | No background, just the content |
+| `still` | `?still=1` | No animations: no equalizer, no scrolling text, no spinning record |
 
 **Colors and text**
 
