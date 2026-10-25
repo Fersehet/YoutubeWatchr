@@ -1,4 +1,9 @@
-# YoutubeWatcher
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-animated.svg">
+    <img src="docs/logo/logo-animated-light.svg" alt="YoutubeWatcher" height="72">
+  </picture>
+</h1>
 
 Show the song you're playing on **YouTube Music** in your OBS stream: cover, title, artist, progress and an equalizer that moves with the music.
 

@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>YoutubeWatcher Editor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8dGl0bGU+WW91dHViZVdhdGNoZXI8L3RpdGxlPgogIDxkZWZzPjxtYXNrIGlkPSJ5dy1jdXQiPjxyZWN0IHg9Ii04IiB5PSItOCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjZmZmIi8+PHBhdGggZD0iTTE1IDE0TDUzIDMzTDE1IDUyWiIgZmlsbD0iIzAwMCIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjkiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L21hc2s+PC9kZWZzPjxnIG1hc2s9InVybCgjeXctY3V0KSI+PGcgZmlsbD0iI2ZmMDAzMyI+PHJlY3QgeD0iNC4wIiB5PSIyMi4wIiB3aWR0aD0iNi40IiBoZWlnaHQ9IjIyIiByeD0iMy4yIi8+PHJlY3QgeD0iMTMuMCIgeT0iMTMuMCIgd2lkdGg9IjYuNCIgaGVpZ2h0PSI0MCIgcng9IjMuMiIvPjxyZWN0IHg9IjIyLjAiIHk9IjE4LjAiIHdpZHRoPSI2LjQiIGhlaWdodD0iMzAiIHJ4PSIzLjIiLz48cmVjdCB4PSIzMS4wIiB5PSI1LjAiIHdpZHRoPSI2LjQiIGhlaWdodD0iNTYiIHJ4PSIzLjIiLz48cmVjdCB4PSI0MC4wIiB5PSIxNS4wIiB3aWR0aD0iNi40IiBoZWlnaHQ9IjM2IiByeD0iMy4yIi8+PHJlY3QgeD0iNDkuMCIgeT0iMTAuMCIgd2lkdGg9IjYuNCIgaGVpZ2h0PSI0NiIgcng9IjMuMiIvPjxyZWN0IHg9IjU4LjAiIHk9IjI0LjAiIHdpZHRoPSI2LjQiIGhlaWdodD0iMTgiIHJ4PSIzLjIiLz48L2c+PC9nPjxwYXRoIGQ9Ik0xNSAxNEw1MyAzM0wxNSA1MloiIGZpbGw9IiNmZmZmZmYiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Inter:wght@800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   /* Layout: stage (mock OBS scene + live overlay) on the left, settings panel on the right; stacks on narrow screens. Single dark look like the stream canvas. */
   :root {
@@ -15,8 +16,9 @@
     --line: #262c3d;
     --fg: #e9ecf5;
     --muted: #8d95ad;
-    --accent: #ff3d6e;
+    --accent: #ff0033;
     --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+    --brand: "Inter", "Segoe UI", system-ui, sans-serif;
     --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
     color-scheme: dark;
@@ -30,8 +32,47 @@
     padding-block: 22px 40px;
   }
   main { max-width: 1280px; margin: 0 auto; display: grid; gap: 18px; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
-  h1 { font-family: var(--display); font-size: clamp(22px, 3.4vw, 30px); margin: 0; }
+  header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
+  /* Brand and start screen work like FaceitWatcher's editor: the mark next to the
+     two-tone name, a hover effect on the mark, and an intro that builds the logo
+     while the preview loads, then blurs away into the page. */
+  .brand { display: flex; align-items: center; gap: 10px; margin: 0; font: 800 clamp(20px, 3vw, 24px)/1 var(--brand); letter-spacing: -.01em; }
+  .brand b { font-weight: inherit; }
+  .brand b span { color: var(--accent); }
+  .brand .sub { font: 500 .8em/1 var(--display); color: var(--muted); padding-left: 10px; margin-left: 2px; border-left: 1px solid var(--line); }
+  .brand-mark { flex: none; display: block; overflow: visible; transition: transform .35s cubic-bezier(.2, .8, .3, 1), filter .35s; }
+  .bm-bar { transform-box: fill-box; transform-origin: center; }
+  .brand:hover .brand-mark { transform: scale(1.18); filter: drop-shadow(0 0 6px rgba(255, 0, 51, .7)); }
+  .brand:hover .bm-bar { animation: eq0 1.5s ease-in-out infinite; }
+  .brand:hover .bm-bar:nth-child(3n+2) { animation-name: eq1; animation-duration: 1.3s; }
+  .brand:hover .bm-bar:nth-child(3n) { animation-name: eq2; animation-duration: 1.7s; }
+
+  .intro { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: radial-gradient(60% 50% at 50% 50%, #1d0a10 0%, var(--bg) 70%); transition: opacity .6s ease, filter .6s ease, visibility 0s .6s; }
+  .intro.done { opacity: 0; filter: blur(14px); visibility: hidden; pointer-events: none; }
+  .intro-inner { display: grid; justify-items: center; gap: 18px; transition: transform .6s cubic-bezier(.5, 0, .2, 1); }
+  .intro.done .intro-inner { transform: scale(1.35); }
+  .intro-logo { overflow: visible; filter: drop-shadow(0 0 18px rgba(255, 0, 51, .45)); }
+  .i-bar { opacity: 0; transform-box: fill-box; transform-origin: center; transform: scaleY(.6);
+    animation: intro-pop .5s cubic-bezier(.3, 1.15, .5, 1) calc(.1s + var(--i) * .06s) forwards, eq0 1.6s ease-in-out calc(1.2s + var(--i) * .05s) infinite; }
+  .i-bar:nth-child(3n+2) { animation-name: intro-pop, eq1; animation-duration: .5s, 1.4s; }
+  .i-bar:nth-child(3n) { animation-name: intro-pop, eq2; animation-duration: .5s, 1.8s; }
+  .i-line { stroke-dasharray: 100; stroke-dashoffset: 100; animation: intro-draw .45s ease-out .55s forwards; }
+  .i-fill { opacity: 0; animation: intro-fade .3s ease .95s forwards; }
+  .intro-word { font: 800 30px/1 var(--brand); letter-spacing: -.01em; opacity: 0; animation: intro-rise .5s ease .75s forwards; }
+  .intro-word span { color: var(--accent); }
+  .intro-bar { width: 160px; height: 2px; background: var(--line); border-radius: 2px; overflow: hidden; opacity: 0; animation: intro-fade .3s ease .8s forwards; }
+  .intro-bar i { display: block; height: 100%; background: var(--accent); box-shadow: 0 0 10px rgba(255, 0, 51, .45); transform-origin: left; transform: scaleX(var(--p, .1)); transition: transform .35s ease; }
+  @keyframes intro-draw { to { stroke-dashoffset: 0; } }
+  @keyframes intro-pop { to { opacity: 1; transform: none; } }
+  @keyframes intro-fade { to { opacity: 1; } }
+  @keyframes intro-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes eq0 { 0%, 100% { transform: scaleY(1); } 20% { transform: scaleY(.67); } 40% { transform: scaleY(.92); } 60% { transform: scaleY(.62); } 80% { transform: scaleY(.83); } }
+  @keyframes eq1 { 0%, 100% { transform: scaleY(1); } 25% { transform: scaleY(.8); } 45% { transform: scaleY(.57); } 70% { transform: scaleY(.95); } 85% { transform: scaleY(.76); } }
+  @keyframes eq2 { 0%, 100% { transform: scaleY(1); } 15% { transform: scaleY(.84); } 35% { transform: scaleY(.67); } 55% { transform: scaleY(.9); } 75% { transform: scaleY(.6); } }
+  @media (prefers-reduced-motion: reduce) {
+    .brand-mark { transition: none; } .brand:hover .bm-bar { animation: none; }
+    .i-bar, .i-line, .i-fill, .intro-word, .intro-bar { animation: none; opacity: 1; stroke-dashoffset: 0; transform: none; }
+  }
   header p { margin: 0; color: var(--muted); }
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
   @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
@@ -81,7 +122,7 @@
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   .themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
   .themes button { text-align: left; padding: 8px 10px; font-size: 13px; }
-  .themes button[aria-pressed="true"] { border-color: var(--accent); background: rgba(255,61,110,.12); }
+  .themes button[aria-pressed="true"] { border-color: var(--accent); background: rgba(255,0,51,.12); }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
   .seg button { border: 0; border-radius: 0; padding: 6px 10px; font-size: 13px; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
@@ -90,9 +131,16 @@
 </style>
 </head>
 <body>
+<div class="intro" id="intro" role="status" aria-label="Loading…">
+  <div class="intro-inner">
+    <svg class="intro-logo" viewBox="-2 -2 68 68" width="96" height="96" aria-hidden="true"><defs><mask id="intro-cut"><rect x="-8" y="-8" width="80" height="80" fill="#fff"/><path d="M15 14L53 33L15 52Z" fill="#000" stroke="#000" stroke-width="9" stroke-linejoin="round"/></mask></defs><g mask="url(#intro-cut)" fill="#ff0033"><rect class="i-bar" style="--i:0" x="4" y="22.0" width="6.4" height="22" rx="3.2"/><rect class="i-bar" style="--i:1" x="13" y="13.0" width="6.4" height="40" rx="3.2"/><rect class="i-bar" style="--i:2" x="22" y="18.0" width="6.4" height="30" rx="3.2"/><rect class="i-bar" style="--i:3" x="31" y="5.0" width="6.4" height="56" rx="3.2"/><rect class="i-bar" style="--i:4" x="40" y="15.0" width="6.4" height="36" rx="3.2"/><rect class="i-bar" style="--i:5" x="49" y="10.0" width="6.4" height="46" rx="3.2"/><rect class="i-bar" style="--i:6" x="58" y="24.0" width="6.4" height="18" rx="3.2"/></g><path class="i-fill" d="M15 14L53 33L15 52Z" fill="#fff"/><path class="i-line" d="M15 14L53 33L15 52Z" pathLength="100" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>
+    <div class="intro-word">Youtube<span>Watcher</span></div>
+    <div class="intro-bar"><i></i></div>
+  </div>
+</div>
 <main>
   <header>
-    <h1>YoutubeWatcher Editor</h1>
+    <h1 class="brand"><svg class="brand-mark" viewBox="-2 -2 68 68" width="34" height="34" aria-hidden="true"><defs><mask id="brand-cut"><rect x="-8" y="-8" width="80" height="80" fill="#fff"/><path d="M15 14L53 33L15 52Z" fill="#000" stroke="#000" stroke-width="9" stroke-linejoin="round"/></mask></defs><g mask="url(#brand-cut)" fill="#ff0033"><rect class="bm-bar" x="4" y="22.0" width="6.4" height="22" rx="3.2"/><rect class="bm-bar" x="13" y="13.0" width="6.4" height="40" rx="3.2"/><rect class="bm-bar" x="22" y="18.0" width="6.4" height="30" rx="3.2"/><rect class="bm-bar" x="31" y="5.0" width="6.4" height="56" rx="3.2"/><rect class="bm-bar" x="40" y="15.0" width="6.4" height="36" rx="3.2"/><rect class="bm-bar" x="49" y="10.0" width="6.4" height="46" rx="3.2"/><rect class="bm-bar" x="58" y="24.0" width="6.4" height="18" rx="3.2"/></g><path d="M15 14L53 33L15 52Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg><b>Youtube<span>Watcher</span></b><span class="sub">Editor</span></h1>
     <p id="mode-note">Design your overlay, then copy the URL into an OBS Browser Source.</p>
   </header>
 
@@ -393,6 +441,24 @@ function scene(t) {
   if (!reduce) requestAnimationFrame(scene);
 }
 addEventListener('resize', () => { fit(); if (reduce) scene(0); });
+// ---- start screen ------------------------------------------------------------
+// Stays until the logo has built up and the preview has loaded, then blurs away.
+(() => {
+  const intro = $('intro'), bar = intro.querySelector('.intro-bar i');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const started = performance.now();
+  let finished = false;
+  setTimeout(() => { if (!finished) bar.style.setProperty('--p', .45); }, 200);
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    bar.style.setProperty('--p', 1);
+    setTimeout(() => intro.classList.add('done'), reduced ? 0 : Math.max(0, 1900 - (performance.now() - started)));
+  };
+  ov.addEventListener('load', finish, { once: true });
+  setTimeout(finish, 4000); // never block the editor if the preview is slow
+})();
+
 render(); requestAnimationFrame(scene);
 </script>
 </body>

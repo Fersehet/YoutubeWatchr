@@ -50,6 +50,11 @@ http.createServer((req, res) => {
     return fs.createReadStream(path.join(__dirname, 'editor.html')).pipe(res);
   }
 
+  if (req.url === '/favicon.svg' || req.url === '/favicon.ico') {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    return fs.createReadStream(path.join(__dirname, 'docs', 'logo', 'favicon.svg')).pipe(res);
+  }
+
   if (req.url === '/' || req.url.startsWith('/?')) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return fs.createReadStream(path.join(__dirname, 'overlay.html')).pipe(res);
