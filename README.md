@@ -7,7 +7,7 @@
 
 Show the song you're playing on **YouTube Music** in your OBS stream: cover, title, artist, progress and an equalizer that moves with the music.
 
-![The vinyl theme: a spinning record with the album cover as its label, the song title, artist and a live equalizer](docs/hero.png)
+![The overlay cycling through all eight themes: Classic, Liquid glass, Vinyl, Retro hi-fi, True Damage, League of Legends, Counter-Strike and FACEIT, each with a live equalizer](docs/themes.gif)
 
 - 8 designs, from a clean card to a spinning record, plus game styles for League of Legends, Counter-Strike and FACEIT
 - An editor in your browser to change colors, fonts, size and more, with a live preview
@@ -65,9 +65,7 @@ With the server running, open **[http://127.0.0.1:8974/editor](http://127.0.0.1:
 
 The editor remembers your settings.
 
-## Themes
-
-![All eight themes side by side: Classic, Liquid glass, Vinyl, Retro hi-fi, True Damage, League of Legends, Counter-Strike and FACEIT](docs/themes.png)
+## Compact version
 
 Every theme also has a **compact** version, a slim one-line bar where the progress runs around the cover:
 
