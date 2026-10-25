@@ -110,8 +110,8 @@
   body.no-card #frost { display: none; }
   body.glass {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
-    --bar1: rgba(255,255,255,.4);
-    --bar2: rgba(255,255,255,.98);
+    --bar1: var(--accent);
+    --bar2: rgba(255,255,255,.95); /* white tips keep the bars readable on a same-colored tint */
     --cap: rgba(255,255,255,0);
     --bar-round: 99;
     --bar-glow: 10;
@@ -153,11 +153,11 @@
     font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: none;
     color: rgba(255,255,255,.75);
   }
-  body.glass #label::before { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,.9); }
+  body.glass #label::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
   body.glass #title { font-size: 21px; font-weight: 650; letter-spacing: -.01em; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
   body.glass #artist { color: rgba(255,255,255,.72); font-weight: 500; }
   body.glass #bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.22); }
-  body.glass #fill { background: rgba(255,255,255,.95); box-shadow: 0 0 10px rgba(255,255,255,.6); border-radius: 3px; }
+  body.glass #fill { background: linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow: 0 0 10px var(--accent); border-radius: 3px; }
   body.glass #progress { color: rgba(255,255,255,.7); }
 
   /* ---- theme=vinyl: a spinning record --------------------------------------
@@ -317,7 +317,11 @@ if (opt.theme === 'retro') {
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
-if (opt.accent) setAccent('#' + opt.accent.replace('#', ''));
+if (opt.accent) {
+  // A fixed color also replaces the cover as the source of the card tint.
+  setAccent('#' + opt.accent.replace('#', ''));
+  document.getElementById('frost').style.background = 'radial-gradient(circle at 25% 45%, var(--accent), transparent 75%)';
+}
 
 const card = document.getElementById('card');
 const $ = id => document.getElementById(id);
@@ -346,7 +350,8 @@ function setArt(url) {
   const img = artBack;
   img.onload = () => {
     img.style.opacity = 1;
-    $('frost').style.backgroundImage = $('vlabel').style.backgroundImage = `url("${url}")`;
+    $('vlabel').style.backgroundImage = `url("${url}")`;
+    if (!opt.accent) $('frost').style.backgroundImage = `url("${url}")`;
     artFront.style.opacity = 0;
     [artFront, artBack] = [img, artFront];
     if (!opt.accent) pickAccent(url);
@@ -451,7 +456,7 @@ function draw(now) {
   const glow = +styles.getPropertyValue('--bar-glow') || 0;
   const cap = styles.getPropertyValue('--cap');
   const seg = +styles.getPropertyValue('--bar-seg') || 0;
-  g.shadowColor = 'rgba(255,255,255,.55)';
+  g.shadowColor = styles.getPropertyValue('--bar1');
 
   const gap = Math.min(3, w / opt.bars * .3), bw = (w - gap * (opt.bars - 1)) / opt.bars;
   for (let i = 0; i < opt.bars; i++) {
