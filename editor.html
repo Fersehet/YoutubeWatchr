@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>YoutubeWatcher Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: stage (mock OBS scene + live overlay) on the left, settings panel on the right; stacks on narrow screens. Single dark look like the stream canvas. */
+  :root {
+    --bg: #0d0f17;
+    --panel: #161a26;
+    --panel2: #1c2130;
+    --line: #262c3d;
+    --fg: #e9ecf5;
+    --muted: #8d95ad;
+    --accent: #ff3d6e;
+    --display: "Chakra Petch", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--fg); margin: 0; }
+  body {
+    font-family: var(--body); font-size: 14px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 22px 40px;
+  }
+  main { max-width: 1280px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+  h1 { font-family: var(--display); font-size: clamp(22px, 3.4vw, 30px); margin: 0; }
+  header p { margin: 0; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .left { display: grid; gap: 14px; min-width: 0; position: sticky; top: 16px; }
+  @media (max-width: 900px) { .left { position: static; } }
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; background: #05060a;
+    box-shadow: 0 0 0 1px var(--line), 0 20px 60px rgba(0,0,0,.5);
+  }
+  .stage.checker { background: repeating-conic-gradient(#1a1d26 0 25%, #12141b 0 50%) 0 0 / 24px 24px; }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage.checker canvas { display: none; }
+  /* color-scheme must match the overlay page, or Chrome paints the frame opaque */
+  #ov { position: absolute; left: 2%; bottom: 3%; border: 0; transform-origin: 0 100%; background: transparent; color-scheme: normal; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar .spacer { flex: 1; }
+  .url { display: grid; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .url-row { display: flex; gap: 8px; min-width: 0; }
+  .url code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 13px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0; }
+  .hint b { color: var(--fg); font-weight: 600; }
+
+  aside { display: grid; gap: 12px; min-width: 0; }
+  fieldset { margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); padding: 12px 14px 14px; display: grid; gap: 10px; min-width: 0; }
+  legend { padding: 0 6px; margin-left: -6px; font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; align-items: center; }
+  .row > span { color: var(--muted); font-size: 13px; }
+  .row.disabled { opacity: .4; pointer-events: none; }
+  .inline { display: flex; gap: 8px; align-items: center; min-width: 0; }
+  .inline output { font: 12px var(--mono); color: var(--muted); min-width: 44px; text-align: right; }
+  input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+  input[type=color] { width: 38px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+  input[type=text], select {
+    width: 100%; min-width: 0; font: 14px var(--body); color: var(--fg); background: var(--panel2);
+    border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px;
+  }
+  label.check { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+  button {
+    font: 500 14px var(--body); color: var(--fg); background: var(--panel2); border: 1px solid var(--line);
+    border-radius: 7px; padding: 7px 12px; cursor: pointer;
+  }
+  button:hover, select:hover, input[type=text]:hover { border-color: var(--muted); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .themes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .themes button { text-align: left; padding: 8px 10px; font-size: 13px; }
+  .themes button[aria-pressed="true"] { border-color: var(--accent); background: rgba(255,61,110,.12); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 6px 10px; font-size: 13px; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  .note { font-size: 12px; color: var(--muted); margin: -4px 0 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>YoutubeWatcher Editor</h1>
+    <p id="mode-note">Design your overlay, then copy the URL into an OBS Browser Source.</p>
+  </header>
+
+  <div class="layout">
+    <div class="left">
+      <div class="stage" id="stage">
+        <canvas id="scene"></canvas>
+        <iframe id="ov" title="Overlay preview"></iframe>
+      </div>
+      <div class="bar">
+        <label class="check"><input type="checkbox" id="demo" checked> Demo songs</label>
+        <button type="button" id="next">Next song</button>
+        <button type="button" id="toggle">Pause</button>
+        <span class="spacer"></span>
+        <label class="check"><input type="checkbox" id="checker"> Checkerboard background</label>
+      </div>
+      <div class="url">
+        <div class="url-row">
+          <code id="url">http://127.0.0.1:8974/</code>
+          <button class="primary" id="copy" type="button">Copy URL</button>
+        </div>
+        <p class="hint">OBS Browser Source size: <b id="size">620 × 200</b>. Clear the source's Custom CSS.</p>
+      </div>
+    </div>
+
+    <aside>
+      <fieldset>
+        <legend>Theme</legend>
+        <div class="themes" id="themes"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Layout</legend>
+        <div class="row"><span>Style</span>
+          <div class="seg" role="group" aria-label="Layout">
+            <button type="button" data-compact="0" aria-pressed="true">Card</button>
+            <button type="button" data-compact="1" aria-pressed="false">Compact</button>
+          </div>
+        </div>
+        <div class="row" id="width-row"><span>Pill width</span>
+          <div class="inline"><input type="range" id="width" min="260" max="700" step="10" value="460"><output id="width-out">460</output></div>
+        </div>
+        <div class="row"><span>Size</span>
+          <div class="inline"><input type="range" id="scale" min="0.5" max="2" step="0.05" value="1"><output id="scale-out">100%</output></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Colors</legend>
+        <div class="row"><span>Accent</span>
+          <div class="seg" role="group" aria-label="Accent source">
+            <button type="button" data-accentmode="auto" aria-pressed="true">From cover</button>
+            <button type="button" data-accentmode="custom" aria-pressed="false">Custom</button>
+          </div>
+        </div>
+        <p class="note" id="brand-note" hidden>This theme uses its own colors unless you pick custom ones.</p>
+        <div class="row" id="accent-row"><span>Colors</span>
+          <div class="inline"><input type="color" id="accent" value="#ff3d6e" aria-label="Main color"><input type="color" id="accent2" value="#ffb000" aria-label="Second color"></div>
+        </div>
+        <div class="row"><span>Title color</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="textOn"> Custom</label><input type="color" id="text" value="#ffffff" aria-label="Title color"></div>
+        </div>
+        <div class="row"><span>Background</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="card" checked> Show card</label></div>
+        </div>
+        <div class="row" id="bg-row"><span>Card color</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="bgOn"> Custom</label><input type="color" id="bg" value="#101218" aria-label="Card color"></div>
+        </div>
+        <div class="row" id="bga-row"><span>Card opacity</span>
+          <div class="inline"><input type="range" id="bgAlpha" min="0" max="1" step="0.05" value="0.8"><output id="bgAlpha-out">80%</output></div>
+        </div>
+        <div class="row"><span>Corners</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="radiusOn"> Custom</label><input type="range" id="radius" min="0" max="40" step="1" value="14"><output id="radius-out">14px</output></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Text</legend>
+        <div class="row"><span>Label</span>
+          <div class="inline"><input type="checkbox" id="showLabel" checked aria-label="Show label"><input type="text" id="label" value="Now Playing" aria-label="Label text"></div>
+        </div>
+        <div class="row"><span>Font</span>
+          <select id="font" aria-label="Font">
+            <option value="">Theme default</option>
+            <option>Inter</option><option>Poppins</option><option>Montserrat</option><option>Outfit</option>
+            <option>Oswald</option><option>Bebas Neue</option><option>Rajdhani</option><option>Orbitron</option>
+            <option>Press Start 2P</option><option>Playfair Display</option><option>Space Mono</option>
+          </select>
+        </div>
+        <div class="row"><span>Show</span>
+          <div class="inline">
+            <label class="check"><input type="checkbox" id="album" checked> Album</label>
+            <label class="check"><input type="checkbox" id="cover" checked> Cover</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Equalizer &amp; progress</legend>
+        <div class="row"><span>Equalizer</span>
+          <div class="inline"><input type="checkbox" id="eq" checked aria-label="Show equalizer"><input type="range" id="bars" min="4" max="64" step="1" value="32" aria-label="Number of bars"><output id="bars-out">32</output></div>
+        </div>
+        <div class="row"><span>Progress</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="progress" checked> Show</label></div>
+        </div>
+        <div class="row"><span>When paused</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="hidePaused"> Hide overlay</label></div>
+        </div>
+      </fieldset>
+
+      <div class="bar">
+        <button type="button" id="reset">Reset all settings</button>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const THEMES = [
+  ['classic', 'Classic'], ['glass', 'Liquid glass'], ['vinyl', 'Vinyl'], ['retro', 'Retro hi-fi'],
+  ['truedamage', 'True Damage'], ['lol', 'League of Legends'], ['cs', 'Counter-Strike'], ['faceit', 'FACEIT'],
+];
+const BRAND_THEMES = ['lol', 'cs', 'faceit', 'truedamage'];
+const DEFAULTS = {
+  theme: 'classic', compact: false, width: 460, scale: 1,
+  accentMode: 'auto', accent: '#ff3d6e', accent2: '#ffb000',
+  textOn: false, text: '#ffffff', card: true, bgOn: false, bg: '#101218', bgAlpha: .8, radiusOn: false, radius: 14,
+  showLabel: true, label: 'Now Playing', font: '', album: true, cover: true,
+  eq: true, bars: 32, progress: true, hidePaused: false,
+  demo: true, checker: false,
+};
+const KEY = 'ytw-editor';
+// When this page is the online preview, the overlay is embedded (no local server).
+const EMBEDDED = typeof window.OVERLAY_SRC === 'string';
+const BASE = EMBEDDED ? 'http://127.0.0.1:8974/' : location.origin + '/';
+
+let state = { ...DEFAULTS };
+try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
+if (EMBEDDED) state.demo = true;
+
+const $ = id => document.getElementById(id);
+const ov = $('ov'), stage = $('stage');
+
+// ---- build the overlay URL -----------------------------------------------------
+function params(forObs) {
+  const p = new URLSearchParams();
+  const s = state, h = v => v.replace('#', '');
+  if (s.theme !== 'classic') p.set('theme', s.theme);
+  if (s.compact) { p.set('compact', '1'); if (s.width !== 460) p.set('width', s.width); }
+  if (s.scale !== 1) p.set('scale', s.scale);
+  if (s.accentMode === 'custom') { p.set('accent', h(s.accent)); p.set('accent2', h(s.accent2)); }
+  if (s.textOn) p.set('text', h(s.text));
+  if (!s.card) p.set('card', '0');
+  if (s.card && s.bgOn) { p.set('bg', h(s.bg)); p.set('bgAlpha', s.bgAlpha); }
+  if (s.radiusOn) p.set('radius', s.radius);
+  if (!s.showLabel) p.set('showLabel', '0');
+  else if (s.label !== 'Now Playing') p.set('label', s.label);
+  if (s.font) p.set('font', s.font);
+  if (!s.album) p.set('album', '0');
+  if (!s.cover) p.set('cover', '0');
+  if (!s.eq) p.set('eq', '0');
+  else if (s.bars !== (s.compact ? 7 : s.theme === 'faceit' ? 12 : 32)) p.set('bars', s.bars);
+  if (!s.progress) p.set('progress', '0');
+  if (s.hidePaused) p.set('hidePaused', '1');
+  if (!forObs && s.demo) p.set('demo', '1');
+  const str = p.toString();
+  return str ? '?' + str : '';
+}
+
+function obsSize() {
+  const w = state.compact ? state.width + 40 : state.theme === 'faceit' ? 460 : 620;
+  const h = state.compact ? 90 : 200;
+  return [Math.ceil(w * state.scale), Math.ceil(h * state.scale)];
+}
+
+let reloadTimer = 0;
+function render() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  $('url').textContent = BASE + params(true);
+  const [w, h] = obsSize();
+  $('size').textContent = `${w} × ${h}`;
+  syncControls();
+  clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(() => {
+    const q = params(false);
+    if (EMBEDDED) ov.srcdoc = '<script>window.DEMO_QUERY=' + JSON.stringify(q || '?') + '<\/script>' + window.OVERLAY_SRC;
+    else ov.src = '/' + q;
+    $('toggle').textContent = 'Pause';
+    fit();
+  }, 150);
+}
+
+function fit() {
+  const [w, h] = obsSize();
+  ov.style.width = w + 'px'; ov.style.height = h + 'px';
+  ov.style.transform = 'scale(' + Math.min(1, stage.clientWidth * .64 / 620) + ')';
+}
+
+// ---- controls ------------------------------------------------------------------
+const themesEl = $('themes');
+for (const [id, name] of THEMES) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = name; b.dataset.theme = id;
+  b.onclick = () => {
+    state.theme = id;
+    if (state.bars === 32 || state.bars === 12 || state.bars === 7) state.bars = state.compact ? 7 : id === 'faceit' ? 12 : 32;
+    render();
+  };
+  themesEl.appendChild(b);
+}
+document.querySelectorAll('[data-compact]').forEach(b => b.onclick = () => {
+  state.compact = b.dataset.compact === '1';
+  if ([7, 12, 32].includes(state.bars)) state.bars = state.compact ? 7 : state.theme === 'faceit' ? 12 : 32;
+  render();
+});
+document.querySelectorAll('[data-accentmode]').forEach(b => b.onclick = () => { state.accentMode = b.dataset.accentmode; render(); });
+
+const checks = ['textOn', 'card', 'bgOn', 'radiusOn', 'showLabel', 'album', 'cover', 'eq', 'progress', 'hidePaused', 'demo', 'checker'];
+checks.forEach(id => $(id).onchange = e => { state[id] = e.target.checked; render(); });
+['accent', 'accent2', 'text', 'bg'].forEach(id => $(id).oninput = e => { state[id] = e.target.value; render(); });
+$('accent').addEventListener('input', () => { state.accentMode = 'custom'; });
+['width', 'scale', 'bgAlpha', 'radius', 'bars'].forEach(id => $(id).oninput = e => { state[id] = +e.target.value; render(); });
+$('label').oninput = e => { state.label = e.target.value; render(); };
+$('font').onchange = e => { state.font = e.target.value; render(); };
+
+function syncControls() {
+  const s = state;
+  themesEl.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.theme === s.theme));
+  document.querySelectorAll('[data-compact]').forEach(b => b.setAttribute('aria-pressed', (b.dataset.compact === '1') === s.compact));
+  document.querySelectorAll('[data-accentmode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.accentmode === s.accentMode));
+  checks.forEach(id => { $(id).checked = s[id]; });
+  ['accent', 'accent2', 'text', 'bg'].forEach(id => { if ($(id).value !== s[id]) $(id).value = s[id]; });
+  ['width', 'scale', 'bgAlpha', 'radius', 'bars'].forEach(id => { $(id).value = s[id]; });
+  if ($('label').value !== s.label) $('label').value = s.label;
+  $('font').value = s.font;
+  $('width-out').textContent = s.width;
+  $('scale-out').textContent = Math.round(s.scale * 100) + '%';
+  $('bgAlpha-out').textContent = Math.round(s.bgAlpha * 100) + '%';
+  $('radius-out').textContent = s.radius + 'px';
+  $('bars-out').textContent = s.bars;
+  $('width-row').classList.toggle('disabled', !s.compact);
+  $('accent-row').classList.toggle('disabled', s.accentMode !== 'custom');
+  $('brand-note').hidden = !(BRAND_THEMES.includes(s.theme) && s.accentMode === 'auto');
+  $('bg-row').classList.toggle('disabled', !s.card);
+  $('bga-row').classList.toggle('disabled', !s.card || !s.bgOn);
+  $('text').disabled = !s.textOn;
+  $('radius').disabled = !s.radiusOn;
+  $('label').disabled = !s.showLabel;
+  $('bars').disabled = !s.eq;
+  $('next').disabled = $('toggle').disabled = !s.demo;
+  $('demo').disabled = EMBEDDED;
+  stage.classList.toggle('checker', s.checker);
+}
+
+$('next').onclick = () => ov.contentWindow.postMessage('next', '*');
+$('toggle').onclick = e => {
+  ov.contentWindow.postMessage('toggle', '*');
+  e.target.textContent = e.target.textContent === 'Pause' ? 'Play' : 'Pause';
+};
+$('reset').onclick = () => { state = { ...DEFAULTS }; render(); };
+$('copy').onclick = e => {
+  const text = $('url').textContent;
+  const done = () => { e.target.textContent = 'Copied'; setTimeout(() => e.target.textContent = 'Copy URL', 1500); };
+  const select = () => { const r = document.createRange(); r.selectNodeContents($('url')); getSelection().removeAllRanges(); getSelection().addRange(r); };
+  try { navigator.clipboard.writeText(text).then(done, select); } catch { select(); }
+};
+if (EMBEDDED) $('mode-note').textContent = 'Online preview with demo songs. Run the local server to use this editor with your own music.';
+
+// ---- mock scene ------------------------------------------------------------------
+const cv = $('scene'), g = cv.getContext('2d');
+const stars = Array.from({ length: 120 }, () => [Math.random(), Math.random() * .6, Math.random()]);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function ridge(w, h, base, amp, freq, phase, color) {
+  g.fillStyle = color; g.beginPath(); g.moveTo(0, h);
+  for (let x = 0; x <= w; x += 6) g.lineTo(x, h * base - amp * h * (Math.sin(x / w * freq + phase) * .6 + Math.sin(x / w * freq * 2.7 + phase * 2) * .4));
+  g.lineTo(w, h); g.fill();
+}
+function scene(t) {
+  const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (w && cv.width !== Math.round(w * dpr)) { cv.width = w * dpr; cv.height = h * dpr; }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const sky = g.createLinearGradient(0, 0, 0, h);
+  sky.addColorStop(0, '#0b1030'); sky.addColorStop(.6, '#3a1f5c'); sky.addColorStop(1, '#f2766b');
+  g.fillStyle = sky; g.fillRect(0, 0, w, h);
+  for (const [x, y, s] of stars) { g.globalAlpha = .3 + .6 * Math.abs(Math.sin(t / 900 + s * 9)); g.fillStyle = '#fff'; g.fillRect(x * w, y * h, 1.5, 1.5); }
+  g.globalAlpha = 1;
+  g.fillStyle = 'rgba(255,214,170,.9)'; g.beginPath(); g.arc(w * .78, h * .5, h * .09, 0, 7); g.fill();
+  const drift = reduce ? 0 : t / 9000;
+  ridge(w, h, .70, .10, 5, drift, '#2a1840');
+  ridge(w, h, .80, .08, 7, 1 + drift * 2, '#1a1030');
+  ridge(w, h, .92, .06, 9, 2 + drift * 3, '#0c0818');
+  if (!reduce) requestAnimationFrame(scene);
+}
+addEventListener('resize', () => { fit(); if (reduce) scene(0); });
+render(); requestAnimationFrame(scene);
+</script>
+</body>
+</html>

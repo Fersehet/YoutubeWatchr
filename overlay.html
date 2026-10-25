@@ -437,6 +437,16 @@
   body.compact.cs #title { font-size: 21px; }
   body.compact.faceit #card { border-radius: 12px; }
 
+  /* ---- custom overrides from the editor (?bg=, ?text=, ?radius=, ?font=) --
+     These are explicit user choices, so they beat every theme. */
+  body.custom-bg #card { background: var(--custom-bg) !important; }
+  body.custom-text #title { color: var(--custom-text) !important; }
+  body.custom-text #artist, body.custom-text #progress { color: var(--custom-text) !important; opacity: .72; }
+  body.custom-radius #card { border-radius: var(--custom-radius) !important; clip-path: none !important; }
+  body.custom-font #card, body.custom-font #card * { font-family: var(--custom-font) !important; }
+  body.no-label #label, body.no-cover #art-wrap, body.no-eq #eq { display: none !important; }
+  body.no-eq.truedamage #bar { visibility: visible; }
+
   /* ---- card=0 works in every theme: drop the panel, keep the content ------
      Placed last so it wins over each theme's own card rules. */
   body.no-card #card {
@@ -481,6 +491,18 @@ const opt = {
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
+  accent2: q.get('accent2'),          // optional second color for gradients
+  bg: q.get('bg'),                    // card background hex, with bgAlpha 0..1
+  bgAlpha: q.has('bgAlpha') ? Math.min(1, Math.max(0, +q.get('bgAlpha'))) : .8,
+  text: q.get('text'),                // title text color hex
+  radius: q.has('radius') ? Math.max(0, +q.get('radius')) : null,
+  font: q.get('font'),                // any Google Fonts family name
+  label: q.has('label') ? q.get('label') : 'Now Playing',
+  showLabel: q.get('showLabel') !== '0',
+  album: q.get('album') !== '0',
+  cover: q.get('cover') !== '0',
+  eq: q.get('eq') !== '0',
+  demo: q.get('demo') === '1',        // built-in demo songs, for previews and the editor
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
@@ -506,9 +528,27 @@ document.body.classList.toggle('no-progress', !opt.progress);
 if (opt.scale !== 1) { document.body.style.transformOrigin = '0 0'; document.body.style.transform = `scale(${opt.scale})`; }
 if (opt.width) document.body.style.setProperty('--cw', Math.max(240, opt.width) + 'px');
 if (BRAND && !opt.accent) setAccent(...BRAND);
+const hex = v => '#' + String(v).replace('#', '');
+function rgba(h, a) {
+  const n = parseInt(h.slice(1).replace(/^(.)(.)(.)$/, '$1$1$2$2$3$3'), 16);
+  return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
+}
+const bs = document.body.style, bc = document.body.classList;
+if (opt.bg) { bs.setProperty('--custom-bg', rgba(hex(opt.bg), opt.bgAlpha)); bc.add('custom-bg'); }
+if (opt.text) { bs.setProperty('--custom-text', hex(opt.text)); bc.add('custom-text'); }
+if (opt.radius !== null) { bs.setProperty('--custom-radius', opt.radius + 'px'); bc.add('custom-radius'); }
+if (opt.font) {
+  const f = document.createElement('link');
+  f.rel = 'stylesheet'; f.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(opt.font).replace(/%20/g, '+')}:wght@400;600;700&display=swap`;
+  document.head.appendChild(f);
+  bs.setProperty('--custom-font', `"${opt.font.replace(/"/g, '')}", system-ui, sans-serif`); bc.add('custom-font');
+}
+bc.toggle('no-label', !opt.showLabel);
+bc.toggle('no-cover', !opt.cover);
+bc.toggle('no-eq', !opt.eq);
 if (opt.accent) {
   // A fixed color also replaces the cover as the source of the card tint.
-  setAccent('#' + opt.accent.replace('#', ''));
+  setAccent('#' + opt.accent.replace('#', ''), opt.accent2 ? '#' + opt.accent2.replace('#', '') : undefined);
   document.getElementById('frost').style.background = 'radial-gradient(circle at 25% 45%, var(--accent), transparent 75%)';
 }
 
@@ -551,11 +591,11 @@ function setArt(url) {
 function onTrack(t) {
   track = t; trackAt = performance.now();
   setMarquee($('title'), t.title || '');
-  setMarquee($('artist'), [t.artist, t.album].filter(Boolean).join(' · '));
+  setMarquee($('artist'), [t.artist, opt.album && t.album].filter(Boolean).join(' · '));
   setArt(t.art);
   card.classList.toggle('paused', !t.playing);
   card.classList.add('show');
-  $('label').textContent = t.playing ? 'Now Playing' : 'Paused';
+  $('label').textContent = t.playing ? opt.label : 'Paused';
 }
 
 function fmt(s) {
@@ -746,9 +786,57 @@ function drawSegments(x, bw, h, lvl, pk, seg, cap, styles) {
 }
 
 // ---- connection -------------------------------------------------------------
-const es = new EventSource((opt.server || '') + '/events');
-es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
-es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
+if (opt.demo) startDemo();
+else {
+  const es = new EventSource((opt.server || '') + '/events');
+  es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
+  es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
+}
+
+// ---- demo mode ---------------------------------------------------------------
+// Made-up songs and a fake spectrum, so the overlay can be previewed without
+// the userscript. The editor drives it with postMessage('next' | 'toggle').
+function startDemo() {
+  function cover(c1, c2, shape) {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 256, 256); gr.addColorStop(0, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    g.globalAlpha = .35; g.fillStyle = '#fff';
+    if (shape === 'sun') { g.beginPath(); g.arc(128, 150, 70, 0, 7); g.fill(); g.globalAlpha = .5; g.fillStyle = c2; for (let i = 0; i < 6; i++) g.fillRect(0, 150 + i * 14, 256, 5 + i); }
+    if (shape === 'rings') { g.lineWidth = 10; g.strokeStyle = '#fff'; for (let r = 30; r < 160; r += 30) { g.beginPath(); g.arc(128, 128, r, 0, 7); g.stroke(); } }
+    if (shape === 'grid') { for (let x = 0; x < 8; x++) for (let y = 0; y < 8; y++) if ((x * 7 + y * 3) % 5 < 2) g.fillRect(x * 32 + 4, y * 32 + 4, 24, 24); }
+    if (shape === 'wave') { g.lineWidth = 8; g.strokeStyle = '#fff'; for (let k = 0; k < 5; k++) { g.beginPath(); for (let x = 0; x <= 256; x += 4) g.lineTo(x, 70 + k * 30 + Math.sin(x / 20 + k) * 14); g.stroke(); } }
+    return c.toDataURL();
+  }
+  const tracks = [
+    { title: 'Neon Harbor', artist: 'Lumen Drive', album: 'Night Shift', duration: 214, bpm: 118, art: cover('#ff4f8b', '#5b2bff', 'sun') },
+    { title: 'Glass Gardens (Extended Mix) feat. Mira Solenne', artist: 'Kaito Aren', album: 'Bloom Cycle', duration: 389, bpm: 124, art: cover('#00d1b2', '#0a3d62', 'rings') },
+    { title: 'Paper Planes at Dawn', artist: 'The Quiet Static', album: 'Low Tide', duration: 176, bpm: 92, art: cover('#ffb347', '#d7263d', 'wave') },
+    { title: 'Pixel Rain', artist: 'Byte Orchard', album: '8-Bit Weather', duration: 201, bpm: 140, art: cover('#8bc34a', '#1b5e20', 'grid') },
+  ];
+  let idx = +q.get('demoTrack') || 0, playing = true, pos = 37, last = performance.now();
+  const send = () => onTrack({ ...tracks[idx % tracks.length], playing, position: pos, ts: Date.now() });
+  const next = () => { idx = (idx + 1) % tracks.length; pos = 0; send(); };
+  window.demo = { next, toggle() { playing = !playing; send(); return playing; } };
+  addEventListener('message', e => { if (e.data === 'next') next(); if (e.data === 'toggle') window.demo.toggle(); });
+  send();
+  setInterval(() => {
+    const now = performance.now(), dt = (now - last) / 1000; last = now;
+    if (!playing) return;
+    pos += dt; if (pos >= tracks[idx % tracks.length].duration) next();
+    // kick and bass on the beat, a moving mid melody, hats on the off-beats
+    const t = now / 1000, beat = (t * tracks[idx % tracks.length].bpm / 60) % 1, kick = Math.exp(-beat * 9), hat = Math.exp(-((beat + .5) % 1) * 14);
+    const bands = [];
+    for (let i = 0; i < 32; i++) {
+      const x = i / 31;
+      const v = .55 * Math.exp(-x * 2.2) + kick * .5 * Math.exp(-x * 6)
+        + .3 * Math.exp(-Math.pow((x - .4 - .12 * Math.sin(t * .9)) * 7, 2))
+        + hat * .35 * Math.exp(-Math.pow((x - .85) * 6, 2)) + Math.random() * .08;
+      bands.push(Math.round(255 * Math.min(1, v)));
+    }
+    onBands(bands);
+  }, 33);
+}
 </script>
 </body>
 </html>
