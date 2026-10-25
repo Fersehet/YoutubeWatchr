@@ -260,7 +260,8 @@
      Progress shows as a ring around the round cover. */
   body.compact { --cap: rgba(255,255,255,0); }
   body.compact.classic { --bar-round: 1; }
-  body.compact #card { display: inline-flex; width: var(--cw, 460px); box-sizing: border-box; padding: 10px 20px 10px 10px; border-radius: 999px; gap: 12px; align-items: center; }
+  /* one fixed height for every theme, so the text sits at the same place in all of them */
+  body.compact #card { display: inline-flex; width: var(--cw, 460px); height: 60px; box-sizing: border-box; padding: 10px 20px 10px 10px; border-radius: 999px; gap: 12px; align-items: center; }
   body.compact #art-wrap {
     /* progress as a ring filling clockwise around the cover */
     width: 40px; height: 40px; border-radius: 50%; box-shadow: none;
@@ -421,6 +422,7 @@
   /* compact versions keep the hard edges */
   body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
   body.compact.cs #label { display: none; }
+  body.compact.cs #card { padding: 10px 20px 10px 10px; }
   body.compact.faceit #card { display: inline-flex; width: var(--cw, 460px); padding: 10px 20px 10px 10px; }
   body.compact.faceit #info { display: flex; }
   body.compact.faceit #art-wrap { width: 40px; height: 40px; }
@@ -581,6 +583,24 @@ function setMarquee(el, text) {
     }
   });
 }
+
+// Compact: fonts sit differently in their line box (VT323, Cinzel, Rajdhani...), so
+// a centered line can still look high or low. Shift title and artist so the middle
+// of their capital letters lands on the middle of the line.
+function centerCompactText() {
+  if (!opt.compact) return;
+  const c = document.createElement('canvas').getContext('2d');
+  for (const id of ['title', 'artist']) {
+    const el = $(id), cs = getComputedStyle(el);
+    c.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = c.measureText('H');
+    const shift = (m.fontBoundingBoxDescent + m.actualBoundingBoxAscent - m.fontBoundingBoxAscent) / 2;
+    el.style.position = 'relative';
+    el.style.top = shift.toFixed(2) + 'px';
+  }
+}
+document.fonts.ready.then(centerCompactText);
+document.fonts.addEventListener('loadingdone', centerCompactText);
 
 function setArt(url) {
   if (!url || url === curArt) return;
