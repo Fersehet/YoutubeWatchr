@@ -24,7 +24,7 @@ The userscript reads the track info and taps the player's audio with the Web Aud
 
 | Option | Example | Effect |
 |---|---|---|
-| `theme` | `?theme=vinyl` | `classic` (default), `glass` (Apple-style liquid glass tinted by the cover), `vinyl` (a spinning record with the cover as its center label) or `retro` (hi-fi LCD with LED level meters) |
+| `theme` | `?theme=vinyl` | `classic` (default), `glass` (Apple-style liquid glass tinted by the cover), `vinyl` (a spinning record with the cover as its center label), `retro` (hi-fi LCD with LED level meters), or game styles `lol`, `cs` and `faceit` (matches the FaceitWatcher overlay) |
 | `compact` | `?compact=1` | One-line pill in any theme; progress shows as a ring around the cover |
 | `bars` | `?bars=24` | Number of equalizer bars (default 32) |
 | `accent` | `?accent=00e5ff` | Fixed color instead of one picked from the cover |

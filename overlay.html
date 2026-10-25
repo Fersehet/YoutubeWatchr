@@ -293,10 +293,72 @@
   body.compact.retro #artist { font-size: 18px; border-left-color: rgba(255,255,255,.15); }
   body.compact.retro #eq { height: 28px; }
 
+  /* ---- game-inspired themes: brand palettes, no logos ---------------------
+     Each sets its own colors (see BRAND in the script); ?accent= overrides. */
+
+  /* theme=lol: hextech gold frame on deep navy, teal magic glow */
+  body.lol { --bar-round: 0; --cap: #f0e6d2; --frost: .18; --bar1: #785a28; --bar2: var(--accent); }
+  body.lol #card {
+    border-radius: 0;
+    background: linear-gradient(180deg, rgba(1,10,19,.95), rgba(9,20,40,.94));
+    box-shadow: inset 0 0 0 1px #c8aa6e, inset 0 0 0 4px rgba(1,10,19,.9), inset 0 0 0 5px rgba(120,90,40,.8), 0 0 24px rgba(10,200,185,.15);
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px);
+  }
+  body.lol #glow { display: none; }
+  body.lol #art-wrap { border-radius: 0; box-shadow: 0 0 0 1px #c8aa6e, 0 0 0 3px #010a13, 0 0 0 4px #785a28, 0 0 16px rgba(10,200,185,.35); }
+  body.lol #label { font-family: "Cinzel", Georgia, serif; color: var(--accent2); letter-spacing: .22em; }
+  body.lol #label::before { border-radius: 0; transform: rotate(45deg); background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  body.lol #title { font-family: "Cinzel", Georgia, serif; font-size: 22px; text-transform: uppercase; letter-spacing: .04em; color: #f0e6d2; }
+  body.lol #artist { color: #a09b8c; }
+  body.lol #bar { border-radius: 0; background: #1e2328; box-shadow: inset 0 0 0 1px #463714; }
+  body.lol #fill { background: linear-gradient(90deg, #785a28, var(--accent)); }
+
+  /* theme=cs: flat tactical HUD panel with a hard accent edge */
+  body.cs { font-family: "Barlow Condensed", "Arial Narrow", "Segoe UI", sans-serif; --bar-round: 0; --cap: #fff; --frost: .15; }
+  body.cs #card {
+    border-radius: 2px; padding: 12px 16px 12px 12px;
+    background: linear-gradient(90deg, rgba(0,0,0,.82), rgba(18,20,24,.66));
+    box-shadow: inset 4px 0 0 var(--accent), 0 8px 24px rgba(0,0,0,.4);
+  }
+  body.cs #glow { display: none; }
+  body.cs #art-wrap { border-radius: 0; box-shadow: none; margin-left: 4px; }
+  body.cs #label { color: var(--accent); font-size: 13px; letter-spacing: .2em; }
+  body.cs #label::before { border-radius: 0; background: var(--accent); box-shadow: none; }
+  body.cs #title { font-size: 28px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1.1; }
+  body.cs #artist { font-size: 18px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; color: rgba(255,255,255,.62); }
+  body.cs #progress { font-size: 13px; }
+  body.cs #bar { height: 3px; border-radius: 0; background: rgba(255,255,255,.14); }
+  body.cs #fill { background: var(--accent); }
+
+  /* theme=faceit: matches the FaceitWatcher overlay's default style
+     (#14161a at 85%, 12px radius, Geist, grey uppercase labels, round avatar
+     with a 2px accent ring, pill progress bar in #ff5500) */
+  body.faceit { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --bar-round: 2; --cap: rgba(255,255,255,0); --frost: 0; }
+  body.faceit #card { border-radius: 12px; background: rgba(20,22,26,.85); box-shadow: none; }
+  body.faceit #glow { display: none; }
+  body.faceit #art-wrap { border-radius: 50%; box-shadow: 0 0 0 2px var(--accent); }
+  body.faceit #label { color: #9aa0a6; font-size: 11px; font-weight: 600; letter-spacing: .05em; }
+  body.faceit #label::before { background: var(--accent); box-shadow: none; }
+  body.faceit #title { font-size: 22px; font-weight: 700; }
+  body.faceit #artist { color: #9aa0a6; }
+  body.faceit #progress { color: #9aa0a6; }
+  body.faceit #bar { height: 6px; border-radius: 99px; background: rgba(255,255,255,.15); }
+  body.faceit #fill { background: var(--accent); }
+
+  /* compact versions keep the hard edges */
+  body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
+  body.compact.lol #card { padding: 10px 22px 10px 12px; }
+  body.compact.lol #art-wrap, body.compact.cs #art-wrap,
+  body.compact.lol #art-wrap img, body.compact.cs #art-wrap img { border-radius: 0; }
+  body.compact.lol #art-wrap, body.compact.faceit #art-wrap { box-shadow: none; }
+  body.compact.lol #title { font-size: 17px; }
+  body.compact.cs #title { font-size: 21px; }
+  body.compact.faceit #card { border-radius: 12px; }
+
   /* ---- card=0 works in every theme: drop the panel, keep the content ------
      Placed last so it wins over each theme's own card rules. */
   body.no-card #card {
-    background: transparent; box-shadow: none;
+    background: transparent; box-shadow: none; clip-path: none;
     backdrop-filter: none; -webkit-backdrop-filter: none;
   }
   body.no-card #card::before, body.no-card #card::after,
@@ -325,7 +387,7 @@
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
 const q = new URLSearchParams(location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro ("minimal" = classic + compact)
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | lol | cs | faceit ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
@@ -335,16 +397,20 @@ const opt = {
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
-document.body.classList.add(['glass', 'vinyl', 'retro'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
-if (opt.theme === 'retro') {
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', cs: 'Barlow+Condensed:wght@500;700', faceit: 'Geist:wght@400;600;700' };
+if (FONTS[opt.theme]) {
   const f = document.createElement('link');
-  f.rel = 'stylesheet'; f.href = 'https://fonts.googleapis.com/css2?family=VT323&display=swap';
+  f.rel = 'stylesheet'; f.href = `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
   document.head.appendChild(f);
 }
+// Game themes use their own palette instead of colors picked from the cover.
+const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#de9b35', '#f4d58d'], faceit: ['#ff5500', '#ff5500'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
+if (BRAND && !opt.accent) setAccent(...BRAND);
 if (opt.accent) {
   // A fixed color also replaces the cover as the source of the card tint.
   setAccent('#' + opt.accent.replace('#', ''));
@@ -382,7 +448,7 @@ function setArt(url) {
     if (!opt.accent) $('frost').style.backgroundImage = `url("${url}")`;
     artFront.style.opacity = 0;
     [artFront, artBack] = [img, artFront];
-    if (!opt.accent) pickAccent(url);
+    if (!opt.accent && !BRAND) pickAccent(url);
   };
   img.src = url;
 }
