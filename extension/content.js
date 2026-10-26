@@ -1,4 +1,4 @@
-// YoutubeWatcher browser extension: reads the song and the audio spectrum on
+// YoutubeWatchr browser extension: reads the song and the audio spectrum on
 // music.youtube.com. background.js broadcasts them through OBS WebSocket
 // (OBS 28+), where overlay.html?obs=1 picks them up. Track and spectrum code is the same as in
 // yt-music-now-playing.user.js; only the transport differs.

@@ -1,7 +1,7 @@
 <h1>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-animated.svg">
-    <img src="docs/logo/logo-animated-light.svg" alt="YoutubeWatcher" height="72">
+    <img src="docs/logo/logo-animated-light.svg" alt="YoutubeWatchr" height="72">
   </picture>
 </h1>
 
@@ -23,7 +23,7 @@ There are two ways to get your music into OBS. Pick one:
 - **Browser extension** (easiest): nothing to install besides the extension. It talks to OBS through OBS's own WebSocket server.
 - **Local server**: a userscript plus a small Node server. Use this if you can't use OBS WebSocket.
 
-First download YoutubeWatcher: click **Code → Download ZIP** on this page and unzip it, or run:
+First download YoutubeWatchr: click **Code → Download ZIP** on this page and unzip it, or run:
 
 ```bash
 git clone https://github.com/Fersehet/YoutubeWatcher.git
@@ -37,7 +37,7 @@ You need **OBS 28 or newer**, which has WebSocket built in.
 2. **Load the extension.**
    - **Chrome, Edge, Brave, Opera:** open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension` folder.
    - **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `extension/manifest.json`. Firefox removes it again when it closes.
-3. **Enter the password.** Click the YoutubeWatcher icon in the browser toolbar and type the OBS WebSocket password (and the port, if it isn't 4455).
+3. **Enter the password.** Click the YoutubeWatchr icon in the browser toolbar and type the OBS WebSocket password (and the port, if it isn't 4455).
 4. **Make the overlay URL.** Double-click `editor.html` in the download. Under **Connection**, choose **Extension** and enter the same port and password. Pick a design and click **Copy URL**.
 5. **Add it to OBS.** Click **+** under Sources and choose **Browser**. Untick **Local file**, paste the URL, set the width and height the editor shows (`620` × `200` by default) and delete the text in **Custom CSS**.
 6. **Play music.** Open [music.youtube.com](https://music.youtube.com) (reload it if it was already open), start a song and **click once anywhere on the page**. The extension icon shows **Connected to OBS**, and the overlay appears.
@@ -49,7 +49,7 @@ The click is needed because browsers only allow reading the audio after you inte
 You need **[Node.js](https://nodejs.org)** (version 18 or newer) and a browser extension for userscripts: **[Tampermonkey](https://www.tampermonkey.net)** or **[Violentmonkey](https://violentmonkey.github.io)**.
 
 1. **Start the server.** On Windows, double-click `start-windows.bat`. On macOS or Linux, run `./start.sh` in a terminal. A window opens and says the overlay is running. Keep it open while you stream.
-2. **Install the userscript.** With Tampermonkey or Violentmonkey installed, open this link and click **Install**: **[Install yt-music-now-playing.user.js](https://raw.githubusercontent.com/Fersehet/YoutubeWatcher/main/yt-music-now-playing.user.js)**
+2. **Install the userscript.** With Tampermonkey or Violentmonkey installed, open this link and click **Install**: **[Install yt-music-now-playing.user.js](https://raw.githubusercontent.com/Fersehet/YoutubeWatchr/main/yt-music-now-playing.user.js)**
 
    > Chrome only: open the Tampermonkey extension details (`chrome://extensions`) and turn on **Allow User Scripts**, otherwise the script won't run.
 

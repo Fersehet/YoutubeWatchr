@@ -843,7 +843,7 @@ function connectObs() {
       }
     };
     ws.onclose = e => {
-      if (e.code === 4009) console.warn('[YoutubeWatcher] wrong OBS WebSocket password (pw=)');
+      if (e.code === 4009) console.warn('[YoutubeWatchr] wrong OBS WebSocket password (pw=)');
       setTimeout(open, delay = Math.min(delay * 2, 10000));
     };
   })();
