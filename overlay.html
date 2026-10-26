@@ -513,6 +513,7 @@ const opt = {
   still: q.get('still') === '1',      // no animations at all
   eq: q.get('eq') !== '0' && q.get('still') !== '1',
   demo: q.get('demo') === '1',        // built-in demo songs, for previews and the editor
+  embed: q.get('embed') === '1',      // no connection: the page that embeds the overlay sends the music (used by the website)
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
@@ -522,6 +523,7 @@ const opt = {
   obs: q.get('obs') === '1',          // get the music from the browser extension through OBS WebSocket
   port: +q.get('port') || 4455,       // OBS WebSocket port
   pw: q.get('pw') || '',              // OBS WebSocket password
+  fonts: q.get('fonts') || '',        // stylesheet with the theme fonts instead of Google Fonts (used by the website)
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
@@ -530,7 +532,7 @@ document.body.classList.toggle('compact', opt.compact);
 const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700' };
 if (FONTS[opt.theme]) {
   const f = document.createElement('link');
-  f.rel = 'stylesheet'; f.href = `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
+  f.rel = 'stylesheet'; f.href = opt.fonts || `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
   document.head.appendChild(f);
 }
 // Game themes use their own palette instead of colors picked from the cover.
@@ -802,6 +804,15 @@ function drawSegments(x, bw, h, lvl, pk, seg, cap, styles) {
 
 // ---- connection -------------------------------------------------------------
 if (opt.demo) startDemo();
+else if (opt.embed) {
+  // same message shape as the extension's OBS event: { ytw: 1, track } or { ytw: 1, bands }
+  addEventListener('message', e => {
+    const d = e.data;
+    if (!d || d.ytw !== 1) return;
+    if (d.track) onTrack(d.track);
+    if (d.bands) onBands(d.bands);
+  });
+}
 else if (opt.obs) connectObs();
 else {
   const es = new EventSource((opt.server || '') + '/events');
