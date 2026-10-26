@@ -26,7 +26,7 @@ There are two ways to get your music into OBS. Pick one:
 First download YoutubeWatchr: click **Code → Download ZIP** on this page and unzip it, or run:
 
 ```bash
-git clone https://github.com/Fersehet/YoutubeWatcher.git
+git clone https://github.com/Fersehet/YoutubeWatchr.git
 ```
 
 ### Option A: browser extension
