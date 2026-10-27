@@ -909,11 +909,11 @@ function drawSuperstar(w, h, bw, gap, pct) {
 }
 
 // iRacing: the bars as the shift lights of a sim-racing wheel. Columns of
-// round LEDs light up green, yellow, red and blue from left to right; when
+// LED segments light up green, yellow, red and blue from left to right; when
 // the music hits hard the whole lit strip flashes blue like the shift point.
 let shiftAvg = 0;
 function drawShiftLights(w, h, bw, gap) {
-  const step = 5, n = Math.floor(h / step), r = Math.min(bw, step - 1.2) / 2;
+  const step = 4, n = Math.floor(h / step);
   let sum = 0;
   for (let i = 0; i < opt.bars; i++) {
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
@@ -925,12 +925,13 @@ function drawShiftLights(w, h, bw, gap) {
   for (let i = 0; i < opt.bars; i++) {
     const f = i / Math.max(1, opt.bars - 1);
     const color = shift ? '#2b7fff' : f < .4 ? '#22d34b' : f < .7 ? '#ffd400' : f < .9 ? '#ff2a2a' : '#2b7fff';
-    const cx = i * (bw + gap) + bw / 2, lit = Math.round(level[i] * n), top = Math.min(n - 1, Math.round(peak[i] * n));
+    // same height as the bars in the other themes: level 0..1 fills the column
+    const x = i * (bw + gap), lit = Math.ceil(level[i] * n - .15), top = Math.min(n - 1, Math.ceil(peak[i] * n - .15) - 1);
     for (let k = 0; k < n; k++) {
-      const on = k < lit || (k === top && top > 0);
-      g.globalAlpha = on ? 1 : .13;
+      const on = k < lit, cap = !on && k === top && top > 0; // falling peak like the caps on the bars
+      g.globalAlpha = on ? 1 : cap ? .55 : .08;
       g.fillStyle = color; g.shadowColor = color; g.shadowBlur = on ? 6 : 0;
-      g.beginPath(); g.arc(cx, h - k * step - step / 2, r, 0, 7); g.fill();
+      g.beginPath(); g.roundRect(x, h - (k + 1) * step + 1, bw, step - 1.2, 1); g.fill();
     }
   }
   g.globalAlpha = 1; g.shadowBlur = 0;
