@@ -450,7 +450,7 @@
   body.iracing #card.paused #label::before { opacity: 1; }
   body.iracing #title { font-size: 26px; font-weight: 700; line-height: 1.15; margin-top: 7px; }
   body.iracing #artist { font-size: 17px; font-weight: 500; color: #9fb0c4; }
-  body.iracing #eq { min-height: 30px; margin-top: 8px; }
+  body.iracing #eq { min-height: 40px; margin-top: 6px; }
   body.iracing #progress { font-size: 14px; font-weight: 700; color: #cfd8e3; }
   body.iracing #bar {
     height: 5px; border-radius: 0; position: relative;
@@ -901,31 +901,34 @@ function drawSuperstar(w, h, bw, gap, pct) {
 }
 
 // iRacing: the equalizer as input telemetry. The throttle (green) is the
-// bass and the brake (red) the highs, moving with the music like the bars in
-// the other themes, each scaled between its own recent low and high so the
-// beat swings through the full height. Both traces scroll to the left, with pedal bars on the right like
-// the in-sim input graph.
+// bass and the brake (red) the highs. The raw band energy barely changes in
+// most songs, so each line shows how far its band is above or below its own
+// average of the last second, scaled by how much it usually varies: every
+// hit swings through the full height, like the bars in the other themes.
+// Both traces scroll to the left, with pedal bars on the right like the
+// in-sim input graph.
 const trace = [];
-let traceAt = 0, env = [[1, 0], [1, 0]], thr = 0, brk = 0;
+let traceAt = 0, stats = [[0, .001], [0, .001]], held = [0, 0], thr = 0, brk = 0;
 function drawTelemetry(w, h, now) {
   let lo = 0, hi = 0;
   const bass = Math.max(1, Math.round(opt.bars / 4)), half = Math.ceil(opt.bars / 2);
   for (let i = 0; i < opt.bars; i++) {
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
-    if (i < bass) lo += level[i] / bass; else if (i >= half) hi += level[i] / (opt.bars - half);
+    if (i < bass) lo += target[i] / bass; else if (i >= half) hi += target[i] / (opt.bars - half);
   }
   const pedals = opt.compact ? 0 : 28, tw = w - pedals, step = 3, max = Math.ceil(tw / step) + 1;
   if (trace.length < max) trace.unshift(...Array(max - trace.length).fill([0, 0])); // flat until the first samples scroll in
-  if (now - traceAt > 80) {
+  held = [Math.max(held[0], lo), Math.max(held[1], hi)]; // keep short hits that fall between two samples
+  if (now - traceAt > 60) {
     traceAt = now;
-    // low and high pull together slowly, so the range follows the song
-    const [t, b] = [lo, hi].map((v, k) => {
-      const e = env[k], r = e[1] - e[0];
-      e[1] = Math.max(v, e[1] - r * .02); e[0] = Math.min(v, e[0] + r * .02);
-      return v < .02 ? 0 : Math.min(1, Math.max(0, (v - e[0]) / Math.max(.06, e[1] - e[0]) * .9 + .05));
+    const [t, b] = held.map((v, k) => {
+      const st = stats[k], d = v - st[0];
+      st[0] += d * .08;                                   // running average
+      st[1] += (d * d - st[1]) * .05;                     // running variance
+      if (v < .02) return 0;                              // paused or silent
+      return Math.min(1, Math.max(0, .08 + d / Math.sqrt(Math.max(st[1], 1e-4)) * .62));
     });
-    // like the bars: jump up on a hit, fall back more slowly
-    thr = t > thr ? t : thr + (t - thr) * .3; brk = b > brk ? b : brk + (b - brk) * .3;
+    thr += (t - thr) * .8; brk += (b - brk) * .8; held = [0, 0];
     trace.push([thr, brk]); if (trace.length > max) trace.splice(0, trace.length - max);
   }
   const y = v => h - 1 - v * (h - 3);

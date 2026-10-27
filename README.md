@@ -80,7 +80,7 @@ Every theme also has a **compact** version, a slim one-line bar where the progre
   <img src="docs/compact.png" alt="Compact versions of the Liquid glass and Vinyl themes">
 </p>
 
-Most themes take their colors from the album cover. The game and racing themes use their own colors. In `iracing` the equalizer is drawn as the in-sim input telemetry: the green throttle trace is the bass and the red brake line the highs, moving with the music like the bars in the other themes.
+Most themes take their colors from the album cover. The game and racing themes use their own colors. In `iracing` the equalizer is drawn as the in-sim input telemetry: the green throttle trace is the bass and the red brake line the highs; every hit swings up to full height, like the bars in the other themes.
 
 ## All options
 
