@@ -966,6 +966,11 @@ else {
   // Settings changed in the editor: show them right away
   es.addEventListener('settings', e => { if (SAVED && JSON.parse(e.data) !== window.YTW_SAVED) location.reload(); });
 }
+// The music tab sends the song every second. When that stops (tab or browser
+// closed), show the last song as paused instead of playing on forever.
+if (!opt.demo && !opt.embed) setInterval(() => {
+  if (track && track.playing && performance.now() - trackAt > 5000) onTrack({ ...track, playing: false });
+}, 1000);
 
 // No server: the browser extension broadcasts the music as an OBS WebSocket
 // custom event (protocol v5), and we listen for it on the same socket.
