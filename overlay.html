@@ -80,11 +80,7 @@
 
   .marquee { overflow: hidden; white-space: nowrap; }
   .marquee span { display: inline-block; padding-right: 40px; }
-  .marquee.scroll span { animation: marquee var(--dur, 10s) linear infinite; }
-  @keyframes marquee {
-    0%, 15% { transform: translateX(0); }
-    85%, 100% { transform: translateX(calc(-1 * var(--dist))); }
-  }
+  .marquee.scroll span { animation: var(--mq) var(--dur, 10s) linear infinite; } /* keyframes come from fitMarquees() */
   #title { font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.25; }
   #artist { font-size: 15px; color: var(--muted); margin-top: 2px; }
 
@@ -670,29 +666,40 @@ function setMarquee(el, text) {
   const span = el.querySelector('span');
   if (span.textContent === text) return false;
   span.textContent = text;
-  fitMarquee(el);
   return true;
 }
 
-function fitMarquee(el) {
-  const span = el.querySelector('span');
-  el.classList.remove('scroll');
+// Long names scroll at the same speed (px/s), so a long title and a short artist
+// don't race each other. The longer one sets the loop length and the shorter one
+// waits at its end, so both start again together.
+const MQ_SPEED = 30, MQ_PAUSE = 1.5, mqStyle = document.head.appendChild(document.createElement('style'));
+function fitMarquees() {
+  const els = [$('title'), $('artist')];
+  els.forEach(el => el.classList.remove('scroll'));
   if (opt.still) return;
   requestAnimationFrame(() => {
-    const overflow = span.scrollWidth - el.clientWidth;
-    if (overflow > 0) {
-      el.style.setProperty('--dist', overflow + 40 + 'px');
-      el.style.setProperty('--dur', Math.max(6, overflow / 30 + 4) + 's');
+    const dist = els.map(el => {
+      const overflow = el.querySelector('span').scrollWidth - el.clientWidth;
+      return overflow > 0 ? overflow + 40 : 0;
+    });
+    const dur = Math.max(...dist.map(d => 2 * MQ_PAUSE + d / MQ_SPEED));
+    const pct = t => (t / dur * 100).toFixed(2) + '%';
+    mqStyle.textContent = els.map((el, i) => !dist[i] ? '' : `@keyframes mq-${el.id} {
+      0%, ${pct(MQ_PAUSE)} { transform: translateX(0); }
+      ${pct(MQ_PAUSE + dist[i] / MQ_SPEED)}, 100% { transform: translateX(-${dist[i]}px); }
+    }`).join('\n');
+    els.forEach((el, i) => {
+      if (!dist[i]) return;
+      el.style.setProperty('--mq', 'mq-' + el.id);
+      el.style.setProperty('--dur', dur + 's');
       el.classList.add('scroll');
-    }
+    });
   });
 }
 
-// Compact: title and artist share one line, so a new title also changes how much
-// room the artist has (and the other way round). Check both whenever one changes.
 function setLine(title, artist) {
   const a = setMarquee($('title'), title), b = setMarquee($('artist'), artist);
-  if (opt.compact && a !== b) fitMarquee(a ? $('artist') : $('title'));
+  if (a || b) fitMarquees();
 }
 
 // Compact: fonts sit differently in their line box (VT323, Cinzel, Rajdhani...), so
