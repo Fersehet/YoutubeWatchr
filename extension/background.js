@@ -1,5 +1,5 @@
 // Holds the connection for the YouTube Music tabs and sends them on, either
-// - to a YoutubeWatchr server (online with your key, or server.js on this computer), or
+// - to a YoutubeWatchr server (server.js on this computer), or
 // - straight to OBS through OBS WebSocket (protocol v5), without any server.
 // It lives here and not in the content script because Chrome blocks web pages, and the
 // content scripts running in them, from opening connections to 127.0.0.1.

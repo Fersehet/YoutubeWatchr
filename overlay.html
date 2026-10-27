@@ -584,7 +584,7 @@
 
 <script>
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
-// On the online server, /overlay/<key> without options uses the settings saved in the editor (YTW_SAVED).
+// A server that hosts the overlay can hand it saved options as window.YTW_SAVED; options in the URL win.
 const SAVED = typeof window.YTW_SAVED === 'string' && !location.search;
 const q = new URLSearchParams(SAVED ? window.YTW_SAVED : location.search);
 const opt = {
@@ -605,7 +605,7 @@ const opt = {
   still: q.get('still') === '1',      // no animations at all
   eq: q.get('eq') !== '0' && q.get('still') !== '1',
   demo: q.get('demo') === '1',        // built-in demo songs, for previews and the editor
-  embed: q.get('embed') === '1',      // no connection: the page that embeds the overlay sends the music (used by the website)
+  embed: q.get('embed') === '1',      // no connection: the page that embeds the overlay sends the music (for previews on other pages)
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
@@ -615,7 +615,7 @@ const opt = {
   obs: q.get('obs') === '1',          // get the music from the browser extension through OBS WebSocket
   port: +q.get('port') || 4455,       // OBS WebSocket port
   pw: q.get('pw') || '',              // OBS WebSocket password
-  fonts: q.get('fonts') || '',        // stylesheet with the theme fonts instead of Google Fonts (used by the website)
+  fonts: q.get('fonts') || '',        // stylesheet with the theme fonts instead of Google Fonts (for previews on other pages)
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
@@ -958,12 +958,12 @@ else if (opt.embed) {
 }
 else if (opt.obs) connectObs();
 else {
-  // Online: /overlay/<key>/events, locally: /events
+  // Served at /overlay/<id>: /overlay/<id>/events, otherwise /events
   const live = location.pathname.match(/^\/overlay\/[\w-]+/);
   const es = new EventSource(live && !opt.server ? live[0] + '/events' : (opt.server || '') + '/events');
   es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
   es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
-  // Settings changed in the editor: show them right away
+  // Saved options changed: show them right away
   es.addEventListener('settings', e => { if (SAVED && JSON.parse(e.data) !== window.YTW_SAVED) location.reload(); });
 }
 // The music tab sends the song every second. When that stops (tab or browser
