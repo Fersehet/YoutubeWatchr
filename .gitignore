@@ -1,0 +1,5 @@
+data/
+.env
+*.log
+# Optional start page (see SITE_DIR in .env.example)
+website/

@@ -1,20 +1,24 @@
 // ==UserScript==
 // @name         YT Music → OBS Now Playing
 // @namespace    yt-music-obs
-// @version      1.0.0
-// @description  Sends the current YouTube Music track and a live audio spectrum to the local OBS overlay server.
+// @version      1.1.0
+// @description  Sends the current YouTube Music track and a live audio spectrum to your YoutubeWatchr server.
 // @match        https://music.youtube.com/*
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @connect      127.0.0.1
 // @connect      localhost
+// @connect      *
 // @run-at       document-idle
 // ==/UserScript==
 
 (function () {
   'use strict';
 
-  const SERVER = 'http://127.0.0.1:8974/update';
+  // The server on this computer. For your online server use its address, e.g.
+  // 'https://ytw.example.com', and put the key from the editor (Connection) into KEY.
+  const SERVER = 'http://127.0.0.1:8974';
+  const KEY = '';
   const BANDS = 32;          // number of equalizer bars sent to the overlay
   const BAND_FPS = 30;       // spectrum updates per second
   const MIN_HZ = 40, MAX_HZ = 16000;
@@ -26,8 +30,8 @@
     inFlight++;
     GM_xmlhttpRequest({
       method: 'POST',
-      url: SERVER,
-      headers: { 'Content-Type': 'application/json' },
+      url: SERVER.replace(/\/+$/, '') + '/update',
+      headers: KEY ? { 'Content-Type': 'application/json', Authorization: 'Bearer ' + KEY } : { 'Content-Type': 'application/json' },
       data: JSON.stringify(payload),
       timeout: 1000,
       onload: () => inFlight--,

@@ -584,7 +584,9 @@
 
 <script>
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
-const q = new URLSearchParams(location.search);
+// On the online server, /overlay/<key> without options uses the settings saved in the editor (YTW_SAVED).
+const SAVED = typeof window.YTW_SAVED === 'string' && !location.search;
+const q = new URLSearchParams(SAVED ? window.YTW_SAVED : location.search);
 const opt = {
   theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
@@ -956,9 +958,13 @@ else if (opt.embed) {
 }
 else if (opt.obs) connectObs();
 else {
-  const es = new EventSource((opt.server || '') + '/events');
+  // Online: /overlay/<key>/events, locally: /events
+  const live = location.pathname.match(/^\/overlay\/[\w-]+/);
+  const es = new EventSource(live && !opt.server ? live[0] + '/events' : (opt.server || '') + '/events');
   es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
   es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
+  // Settings changed in the editor: show them right away
+  es.addEventListener('settings', e => { if (SAVED && JSON.parse(e.data) !== window.YTW_SAVED) location.reload(); });
 }
 
 // No server: the browser extension broadcasts the music as an OBS WebSocket

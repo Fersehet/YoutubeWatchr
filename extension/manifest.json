@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "YoutubeWatchr",
-  "version": "1.0.0",
-  "description": "Shows your YouTube Music song in OBS through OBS WebSocket. No server needed.",
+  "version": "1.1.0",
+  "description": "Shows your YouTube Music song in OBS, through your YoutubeWatchr server or straight through OBS WebSocket.",
   "icons": {
     "16": "icons/16.png",
     "32": "icons/32.png",
