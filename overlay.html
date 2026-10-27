@@ -422,9 +422,9 @@
   body.compact.truedamage #eq { flex: none; min-height: 0; width: 70px; height: 30px; }
 
   /* theme=iracing: sim-racing HUD. Dark slate panel with a blue top edge, a
-     license-style chip as the label, and the equalizer as the input telemetry
-     trace (green throttle area, red brake line, pedal bars on the right). The
-     progress bar is split into three sectors. */
+     license-style chip as the label, and the equalizer as the shift lights of
+     a wheel (green, yellow, red, blue LEDs). The progress bar is split into
+     three sectors. */
   body.iracing { font-family: "Roboto", "Segoe UI", system-ui, sans-serif; --frost: .12; }
   body.iracing #card {
     border-radius: 4px; padding: 14px 18px 14px 14px;
@@ -790,6 +790,11 @@ function rgbToHsl(r, g, b) {
 const cv = $('eq'), g = cv.getContext('2d');
 let target = new Float32Array(opt.bars), level = new Float32Array(opt.bars), peak = new Float32Array(opt.bars);
 let lastBands = 0;
+// Most songs keep every band at a steady level with small changes on top,
+// which leaves the bars hovering at the same height. Each band is compared
+// with its own average of the last second and that difference is amplified,
+// so hits jump out while the rough shape of the spectrum stays.
+const bandAvg = new Float32Array(opt.bars).fill(-1);
 
 function onBands(b) {
   lastBands = performance.now();
@@ -798,7 +803,10 @@ function onBands(b) {
     const a = (i / opt.bars) * b.length, z = ((i + 1) / opt.bars) * b.length;
     let m = 0;
     for (let j = Math.floor(a); j < Math.max(Math.floor(a) + 1, Math.ceil(z)); j++) m = Math.max(m, b[j] || 0);
-    target[i] = m / 255;
+    const v = m / 255;
+    if (bandAvg[i] < 0) bandAvg[i] = v;
+    bandAvg[i] += (v - bandAvg[i]) * .04;
+    target[i] = Math.max(0, Math.min(1, v * .6 + (v - bandAvg[i]) * 2.6));
   }
 }
 
@@ -837,7 +845,7 @@ function draw(now) {
     ? Math.min(1, (track.position + (playing ? (now - trackAt) / 1000 : 0)) / track.duration) : 0;
   const gap = Math.min(3, w / opt.bars * .3), bw = (w - gap * (opt.bars - 1)) / opt.bars;
   if (opt.theme === 'truedamage') { drawSuperstar(w, h, bw, gap, pct); }
-  else if (opt.theme === 'iracing') { drawTelemetry(w, h, now); }
+  else if (opt.theme === 'iracing') { drawShiftLights(w, h, bw, gap); }
   else for (let i = 0; i < opt.bars; i++) {
     // Fast attack, slower release, falling peak caps.
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
@@ -900,58 +908,32 @@ function drawSuperstar(w, h, bw, gap, pct) {
   g.strokeStyle = '#e8f6ff'; g.lineWidth = 1.6; g.stroke();
 }
 
-// iRacing: the equalizer as input telemetry. The throttle (green) is the
-// bass and the brake (red) the highs. The raw band energy barely changes in
-// most songs, so each line shows how far its band is above or below its own
-// average of the last second, scaled by how much it usually varies: every
-// hit swings through the full height, like the bars in the other themes.
-// Both traces scroll to the left, with pedal bars on the right like the
-// in-sim input graph.
-const trace = [];
-let traceAt = 0, stats = [[0, .001], [0, .001]], held = [0, 0], thr = 0, brk = 0;
-function drawTelemetry(w, h, now) {
-  let lo = 0, hi = 0;
-  const bass = Math.max(1, Math.round(opt.bars / 4)), half = Math.ceil(opt.bars / 2);
+// iRacing: the bars as the shift lights of a sim-racing wheel. Columns of
+// round LEDs light up green, yellow, red and blue from left to right; when
+// the music hits hard the whole lit strip flashes blue like the shift point.
+let shiftAvg = 0;
+function drawShiftLights(w, h, bw, gap) {
+  const step = 5, n = Math.floor(h / step), r = Math.min(bw, step - 1.2) / 2;
+  let sum = 0;
   for (let i = 0; i < opt.bars; i++) {
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
-    if (i < bass) lo += target[i] / bass; else if (i >= half) hi += target[i] / (opt.bars - half);
+    peak[i] = Math.max(level[i], peak[i] - .012);
+    sum += level[i];
   }
-  const pedals = opt.compact ? 0 : 28, tw = w - pedals, step = 3, max = Math.ceil(tw / step) + 1;
-  if (trace.length < max) trace.unshift(...Array(max - trace.length).fill([0, 0])); // flat until the first samples scroll in
-  held = [Math.max(held[0], lo), Math.max(held[1], hi)]; // keep short hits that fall between two samples
-  if (now - traceAt > 60) {
-    traceAt = now;
-    const [t, b] = held.map((v, k) => {
-      const st = stats[k], d = v - st[0];
-      st[0] += d * .08;                                   // running average
-      st[1] += (d * d - st[1]) * .05;                     // running variance
-      if (v < .02) return 0;                              // paused or silent
-      return Math.min(1, Math.max(0, .08 + d / Math.sqrt(Math.max(st[1], 1e-4)) * .62));
-    });
-    thr += (t - thr) * .8; brk += (b - brk) * .8; held = [0, 0];
-    trace.push([thr, brk]); if (trace.length > max) trace.splice(0, trace.length - max);
-  }
-  const y = v => h - 1 - v * (h - 3);
-  g.fillStyle = 'rgba(255,255,255,.07)';
-  for (const f of [.25, .5, .75]) g.fillRect(0, Math.round(y(f)), tw, 1);
-  const x0 = tw - (trace.length - 1) * step;
-  for (const [k, color] of [[0, '#22d34b'], [1, '#ff2a2a']]) {
-    g.beginPath();
-    trace.forEach((p, i) => g.lineTo(x0 + i * step, y(p[k])));
-    if (!k) {
-      g.lineTo(tw, h); g.lineTo(x0, h); g.closePath();
-      g.fillStyle = 'rgba(34,211,75,.18)'; g.fill();
-      g.beginPath(); trace.forEach((p, i) => g.lineTo(x0 + i * step, y(p[0])));
+  const m = sum / opt.bars, shift = m > .15 && m > shiftAvg + .07; // a hit well above the recent average
+  shiftAvg += (m - shiftAvg) * .03;
+  for (let i = 0; i < opt.bars; i++) {
+    const f = i / Math.max(1, opt.bars - 1);
+    const color = shift ? '#2b7fff' : f < .4 ? '#22d34b' : f < .7 ? '#ffd400' : f < .9 ? '#ff2a2a' : '#2b7fff';
+    const cx = i * (bw + gap) + bw / 2, lit = Math.round(level[i] * n), top = Math.min(n - 1, Math.round(peak[i] * n));
+    for (let k = 0; k < n; k++) {
+      const on = k < lit || (k === top && top > 0);
+      g.globalAlpha = on ? 1 : .13;
+      g.fillStyle = color; g.shadowColor = color; g.shadowBlur = on ? 6 : 0;
+      g.beginPath(); g.arc(cx, h - k * step - step / 2, r, 0, 7); g.fill();
     }
-    g.strokeStyle = color; g.lineWidth = 1.6; g.lineJoin = 'round'; g.stroke();
   }
-  if (!pedals) return;
-  // pedal bars: brake, throttle
-  [[brk, '#ff2a2a'], [thr, '#22d34b']].forEach(([v, color], i) => {
-    const x = tw + 8 + i * 11;
-    g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x, 0, 8, h);
-    g.fillStyle = color; g.fillRect(x, h - v * h, 8, v * h);
-  });
+  g.globalAlpha = 1; g.shadowBlur = 0;
 }
 
 // LED-style meter: lit segments go accent, second accent, red with height.

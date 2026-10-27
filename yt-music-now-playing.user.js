@@ -22,6 +22,7 @@
   const BANDS = 32;          // number of equalizer bars sent to the overlay
   const BAND_FPS = 30;       // spectrum updates per second
   const MIN_HZ = 40, MAX_HZ = 16000;
+  const DB_FLOOR = -85, DB_CEIL = -30; // band loudness shown as empty .. full bar
 
   // ---- transport -----------------------------------------------------------
   let inFlight = 0;
@@ -97,11 +98,15 @@
     for (let i = 0; i <= BANDS; i++) {
       edges.push(MIN_HZ * Math.pow(MAX_HZ / MIN_HZ, i / BANDS));
     }
+    // Each band gets its own FFT bins (the lowest bands would otherwise share
+    // one bin and always show the same height) and its center frequency.
     bandBins = [];
+    let prev = 1;
     for (let i = 0; i < BANDS; i++) {
-      const lo = Math.max(1, Math.floor(edges[i] / binHz));
-      const hi = Math.max(lo + 1, Math.ceil(edges[i + 1] / binHz));
-      bandBins.push([lo, hi]);
+      const lo = Math.max(prev, Math.round(edges[i] / binHz));
+      const hi = Math.max(lo + 1, Math.round(edges[i + 1] / binHz));
+      bandBins.push([lo, hi, Math.sqrt(edges[i] * edges[i + 1])]);
+      prev = hi;
     }
   }
 
@@ -113,11 +118,9 @@
         ctx = new AudioContext();
         analyser = ctx.createAnalyser();
         analyser.fftSize = 4096;
-        analyser.smoothingTimeConstant = 0.6;
-        analyser.minDecibels = -85;
-        analyser.maxDecibels = -20;
+        analyser.smoothingTimeConstant = 0.4; // keeps the hits; the overlay smooths the fall
         analyser.connect(ctx.destination);
-        freq = new Uint8Array(analyser.frequencyBinCount);
+        freq = new Float32Array(analyser.frequencyBinCount);
         buildBands(ctx.sampleRate, analyser.fftSize);
       }
       ctx.createMediaElementSource(v).connect(analyser);
@@ -145,11 +148,16 @@
       return;
     }
     sentSilence = false;
-    analyser.getByteFrequencyData(freq);
-    const bands = bandBins.map(([lo, hi]) => {
-      let max = 0;
-      for (let i = lo; i < hi && i < freq.length; i++) if (freq[i] > max) max = freq[i];
-      return max;
+    // Loudness of each band: the mean power of its bins in dB, tilted up by
+    // 3 dB per octave so lows, mids and highs of a typical mix (which, like
+    // pink noise, gets quieter towards the highs) come out equally tall.
+    // DB_FLOOR..DB_CEIL is mapped to 0..255; pink noise at -16 dBFS sits at 55%.
+    analyser.getFloatFrequencyData(freq);
+    const bands = bandBins.map(([lo, hi, fc]) => {
+      let p = 0;
+      for (let i = lo; i < hi; i++) p += Math.pow(10, freq[i] / 10);
+      const db = 10 * Math.log10(p / (hi - lo) + 1e-20) + 3 * Math.log2(fc / 1000);
+      return Math.round(255 * Math.min(1, Math.max(0, (db - DB_FLOOR) / (DB_CEIL - DB_FLOOR))));
     });
     send({ bands });
   }, 1000 / BAND_FPS);
