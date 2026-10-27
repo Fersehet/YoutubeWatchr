@@ -909,22 +909,16 @@ function drawSuperstar(w, h, bw, gap, pct) {
 }
 
 // iRacing: the bars as the shift lights of a sim-racing wheel. Columns of
-// LED segments light up green, yellow, red and blue from left to right; when
-// the music hits hard the whole lit strip flashes blue like the shift point.
-let shiftAvg = 0;
+// LED segments light up green, yellow, red and blue from left to right.
 function drawShiftLights(w, h, bw, gap) {
   const step = 4, n = Math.floor(h / step);
-  let sum = 0;
   for (let i = 0; i < opt.bars; i++) {
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
     peak[i] = Math.max(level[i], peak[i] - .012);
-    sum += level[i];
   }
-  const m = sum / opt.bars, shift = m > .15 && m > shiftAvg + .07; // a hit well above the recent average
-  shiftAvg += (m - shiftAvg) * .03;
   for (let i = 0; i < opt.bars; i++) {
     const f = i / Math.max(1, opt.bars - 1);
-    const color = shift ? '#2b7fff' : f < .4 ? '#22d34b' : f < .7 ? '#ffd400' : f < .9 ? '#ff2a2a' : '#2b7fff';
+    const color = f < .4 ? '#22d34b' : f < .7 ? '#ffd400' : f < .9 ? '#ff2a2a' : '#2b7fff';
     // same height as the bars in the other themes: level 0..1 fills the column
     const x = i * (bw + gap), lit = Math.ceil(level[i] * n - .15), top = Math.min(n - 1, Math.ceil(peak[i] * n - .15) - 1);
     for (let k = 0; k < n; k++) {
