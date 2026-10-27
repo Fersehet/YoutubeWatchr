@@ -8,10 +8,10 @@
 Show the song you're playing on **YouTube Music** in your OBS stream: cover, title, artist, progress and an equalizer that moves with the music.
 
 <p align="center">
-  <img src="docs/themes.gif" alt="The overlay cycling through all eight themes: Classic, Liquid glass, Vinyl, Retro hi-fi, True Damage, League of Legends, Counter-Strike and FACEIT, each with a live equalizer" width="720">
+  <img src="docs/themes.gif" alt="The overlay cycling through all ten themes: Classic, Liquid glass, Vinyl, Retro hi-fi, True Damage, League of Legends, Counter-Strike, FACEIT, iRacing and Formula 1, each with a live equalizer" width="720">
 </p>
 
-- 8 designs, from a clean card to a spinning record, plus game styles for League of Legends, Counter-Strike and FACEIT
+- 10 designs, from a clean card to a spinning record, plus game styles for League of Legends, Counter-Strike and FACEIT and racing styles for iRacing and Formula 1
 - An editor in your browser to change colors, fonts, size and more, with a live preview
 - Works with just a browser extension through OBS WebSocket, or with a small local server
 - Runs on your own computer. No account, no API key, nothing is sent anywhere
@@ -76,7 +76,7 @@ Every theme also has a **compact** version, a slim one-line bar where the progre
   <img src="docs/compact.png" alt="Compact versions of the Liquid glass and Vinyl themes">
 </p>
 
-Most themes take their colors from the album cover. The game themes use their own colors.
+Most themes take their colors from the album cover. The game and racing themes use their own colors. In `iracing` the equalizer is drawn as the in-sim input telemetry: bass is the green throttle trace, the highs the red brake line.
 
 ## All options
 
@@ -86,7 +86,7 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 
 | Option | Example | What it does |
 |---|---|---|
-| `theme` | `?theme=vinyl` | `classic` (default), `glass`, `vinyl`, `retro`, `truedamage`, `lol`, `cs` or `faceit` |
+| `theme` | `?theme=vinyl` | `classic` (default), `glass`, `vinyl`, `retro`, `truedamage`, `lol`, `cs`, `faceit`, `iracing` or `f1` |
 | `compact` | `?compact=1` | Slim one-line version |
 | `width` | `?compact=1&width=380` | Width of the compact bar in pixels (default 460). Long names scroll inside |
 | `scale` | `?scale=1.5` | Make everything bigger or smaller (0.3 to 3). Multiply the OBS width and height by the same number |

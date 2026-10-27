@@ -425,6 +425,94 @@
   }
   body.compact.truedamage #eq { flex: none; min-height: 0; width: 70px; height: 30px; }
 
+  /* theme=iracing: sim-racing HUD. Dark slate panel with a blue top edge, a
+     license-style chip as the label, and the equalizer as the input telemetry
+     trace (green throttle area, red brake line, pedal bars on the right). The
+     progress bar is split into three sectors. */
+  body.iracing { font-family: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif; --frost: .12; }
+  body.iracing #card {
+    border-radius: 4px; padding: 14px 18px 14px 14px;
+    background: linear-gradient(180deg, rgba(22,28,38,.95), rgba(10,13,19,.95));
+    box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.07);
+  }
+  body.iracing #card::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; pointer-events: none;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 30%, transparent));
+  }
+  body.iracing #glow { display: none; }
+  body.iracing #art-wrap { border-radius: 3px; box-shadow: 0 0 0 1px rgba(255,255,255,.18), 0 6px 16px rgba(0,0,0,.5); }
+  body.iracing #label {
+    align-self: flex-start; padding: 2px 8px 2px 0; border-radius: 3px; gap: 7px;
+    background: color-mix(in srgb, var(--accent) 22%, transparent); box-shadow: inset 0 0 0 1px var(--accent);
+    color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .1em; overflow: hidden;
+  }
+  body.iracing #label::before {
+    /* the license class letter box */
+    content: "A"; width: auto; height: auto; padding: 2px 6px; margin: -2px 0; border-radius: 0;
+    background: var(--accent); box-shadow: none; color: #fff; font-size: 12px; letter-spacing: 0;
+  }
+  body.iracing #card.paused #label::before { opacity: 1; }
+  body.iracing #title { font-size: 26px; font-weight: 700; line-height: 1.15; margin-top: 7px; }
+  body.iracing #artist { font-size: 17px; font-weight: 600; color: #9fb0c4; }
+  body.iracing #eq { min-height: 30px; margin-top: 8px; }
+  body.iracing #progress { font-size: 14px; font-weight: 700; color: #cfd8e3; }
+  body.iracing #bar {
+    height: 5px; border-radius: 0; position: relative;
+    background: rgba(255,255,255,.12);
+  }
+  body.iracing #bar::after {
+    /* sector lines at one and two thirds */
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, transparent calc(33.33% - 1px), #0a0d13 0 calc(33.33% + 1px), transparent 0 calc(66.67% - 1px), #0a0d13 0 calc(66.67% + 1px), transparent 0);
+  }
+  body.iracing #fill { background: var(--accent); }
+  body.compact.iracing #card { border-radius: 4px; padding: 10px 20px 10px 10px; }
+  body.compact.iracing #eq { width: 70px; height: 28px; min-height: 0; }
+  body.compact.iracing #card::after { border-radius: 0; }
+  body.compact.iracing { --cfs: 19px; }
+
+  /* theme=f1: race broadcast graphics. Dark card with a rounded top-right
+     corner, a red team stripe on the left, a slanted red "Now Playing" tab,
+     bold uppercase title and a checkered flag fading in on the right. */
+  body.f1 {
+    font-family: "Titillium Web", "Segoe UI", system-ui, sans-serif;
+    --frost: .1; --bar-round: 0; --bar1: var(--accent); --bar2: #fff; --cap: rgba(255,255,255,.9);
+  }
+  body.f1 #card {
+    border-radius: 0 22px 0 0; padding: 14px 20px 14px 22px;
+    background: linear-gradient(90deg, rgba(21,21,30,.96), rgba(31,31,39,.94));
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+  }
+  body.f1 #card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; pointer-events: none;
+    background: var(--accent);
+  }
+  body.f1 #card::after {
+    content: ""; position: absolute; right: 0; top: 0; width: 46%; height: 100%; pointer-events: none;
+    background: repeating-conic-gradient(rgba(255,255,255,.07) 0 25%, transparent 0 50%) 0 0 / 16px 16px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 85%); mask-image: linear-gradient(90deg, transparent, #000 85%);
+  }
+  body.f1 #glow { display: none; }
+  body.f1 #art-wrap { border-radius: 0 10px 0 0; box-shadow: 0 6px 16px rgba(0,0,0,.5); }
+  body.f1 #label {
+    align-self: flex-start; padding: 1px 14px 1px 10px; margin-left: -2px;
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .12em;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  }
+  body.f1 #label::before { display: none; }
+  body.f1 #title { font-size: 26px; font-weight: 900; text-transform: uppercase; line-height: 1.05; margin-top: 5px; letter-spacing: .01em; }
+  body.f1 #artist { font-size: 17px; font-weight: 400; color: #c6c6cf; }
+  body.f1 #eq { min-height: 36px; }
+  body.f1 #progress { font-size: 13px; font-weight: 700; color: #c6c6cf; }
+  body.f1 #bar { height: 4px; border-radius: 0; background: rgba(255,255,255,.14); }
+  body.f1 #fill { background: var(--accent); box-shadow: 2px 0 0 #fff; }
+  body.compact.f1 #card { border-radius: 0 18px 0 0; padding: 10px 20px 10px 16px; }
+  body.compact.f1 #card::before { border-radius: 0; width: 5px; }
+  body.compact.f1 #card::after { border-radius: 0 18px 0 0; }
+  body.compact.f1 #art-wrap, body.compact.iracing #art-wrap { box-shadow: none; border-radius: 50%; }
+  body.compact.f1 #title { font-weight: 900; }
+  body.compact.f1 { --cfs: 19px; }
+
   /* compact versions keep the hard edges */
   body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
   body.compact.cs #label { display: none; }
@@ -498,7 +586,7 @@
 // Options via URL, e.g. http://127.0.0.1:8974/?bars=24&accent=00e5ff&hidePaused=1
 const q = new URLSearchParams(location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | lol | cs | faceit ("minimal" = classic + compact)
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
@@ -529,16 +617,16 @@ const opt = {
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
-document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
-const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700' };
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Barlow+Semi+Condensed:wght@600;700', f1: 'Titillium+Web:wght@400;700;900' };
 if (FONTS[opt.theme]) {
   const f = document.createElement('link');
   f.rel = 'stylesheet'; f.href = opt.fonts || `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
   document.head.appendChild(f);
 }
 // Game themes use their own palette instead of colors picked from the cover.
-const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'] }[opt.theme];
+const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
@@ -740,6 +828,7 @@ function draw(now) {
     ? Math.min(1, (track.position + (playing ? (now - trackAt) / 1000 : 0)) / track.duration) : 0;
   const gap = Math.min(3, w / opt.bars * .3), bw = (w - gap * (opt.bars - 1)) / opt.bars;
   if (opt.theme === 'truedamage') { drawSuperstar(w, h, bw, gap, pct); }
+  else if (opt.theme === 'iracing') { drawTelemetry(w, h, now); }
   else for (let i = 0; i < opt.bars; i++) {
     // Fast attack, slower release, falling peak caps.
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
@@ -800,6 +889,44 @@ function drawSuperstar(w, h, bw, gap, pct) {
   g.lineWidth = 1.5; g.strokeStyle = '#c8aa6e'; g.stroke();
   g.beginPath(); g.moveTo(cx - 2.8, cy + .2); g.lineTo(cx - .6, cy + 2.3); g.lineTo(cx + 3, cy - 2.2);
   g.strokeStyle = '#e8f6ff'; g.lineWidth = 1.6; g.stroke();
+}
+
+// iRacing: the music as input telemetry. Bass drives the green throttle trace,
+// the highs the red brake line; both scroll to the left, with pedal bars on
+// the right like the in-sim input graph.
+const trace = [];
+let traceAt = 0;
+function drawTelemetry(w, h, now) {
+  let lo = 0, hi = 0;
+  const half = Math.ceil(opt.bars / 2);
+  for (let i = 0; i < opt.bars; i++) {
+    level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
+    if (i < half) lo += level[i] / half; else hi += level[i] / (opt.bars - half);
+  }
+  const thr = Math.min(1, lo * 1.35), brk = Math.min(1, Math.max(0, hi - .18) * 2.2);
+  const pedals = opt.compact ? 0 : 28, tw = w - pedals, step = 4, max = Math.ceil(tw / step) + 1;
+  if (now - traceAt > 33) { traceAt = now; trace.push([thr, brk]); if (trace.length > max) trace.splice(0, trace.length - max); }
+  const y = v => h - 1 - v * (h - 3);
+  g.fillStyle = 'rgba(255,255,255,.07)';
+  for (const f of [.25, .5, .75]) g.fillRect(0, Math.round(y(f)), tw, 1);
+  const x0 = tw - (trace.length - 1) * step;
+  for (const [k, color] of [[0, '#22d34b'], [1, '#ff2a2a']]) {
+    g.beginPath();
+    trace.forEach((p, i) => g.lineTo(x0 + i * step, y(p[k])));
+    if (!k) {
+      g.lineTo(tw, h); g.lineTo(x0, h); g.closePath();
+      g.fillStyle = 'rgba(34,211,75,.18)'; g.fill();
+      g.beginPath(); trace.forEach((p, i) => g.lineTo(x0 + i * step, y(p[0])));
+    }
+    g.strokeStyle = color; g.lineWidth = 1.6; g.lineJoin = 'round'; g.stroke();
+  }
+  if (!pedals) return;
+  // pedal bars: brake, throttle
+  [[brk, '#ff2a2a'], [thr, '#22d34b']].forEach(([v, color], i) => {
+    const x = tw + 8 + i * 11;
+    g.fillStyle = 'rgba(255,255,255,.1)'; g.fillRect(x, 0, 8, h);
+    g.fillStyle = color; g.fillRect(x, h - v * h, 8, v * h);
+  });
 }
 
 // LED-style meter: lit segments go accent, second accent, red with height.
