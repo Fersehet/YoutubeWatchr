@@ -5,7 +5,7 @@ const LABELS = {
   connected: { server: 'Connected to the server', obs: 'Connected to OBS' },
   offline: { server: 'Server not reachable. Check the address.', obs: 'OBS not reachable. Is OBS open with the WebSocket server on?' },
   'wrong-password': 'Wrong password',
-  'wrong-key': 'Wrong key. Copy it again from the editor.',
+  'wrong-key': 'Wrong key',
   'no-server': 'Enter the server address',
 };
 let mode = 'server';
