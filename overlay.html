@@ -277,8 +277,10 @@
   /* title and artist share one text size (--cfs, set per theme) so they line up */
   body.compact { --cfs: 17px; }
   html body.compact #title, html body.compact #artist { font-size: var(--cfs); line-height: 1.25; margin: 0; } /* html: beats each theme's own sizes */
-  body.compact #title { margin: 0; flex: 0 1 auto; min-width: 0; max-width: 62%; }
-  body.compact #artist { margin: 0; flex: 1 1 0; min-width: 40px; }
+  /* both start from 0 and grow equally, each up to its own text width: if both
+     names are too long they get the same width and both scroll, like the full card */
+  body.compact #title { margin: 0; flex: 1 1 0; min-width: 0; max-width: max-content; }
+  body.compact #artist { margin: 0; flex: 1 1 0; min-width: 40px; max-width: max-content; }
   body.compact #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
   body.compact .marquee span { padding-right: 0; }
   body.compact #card::before, body.compact #card::after { border-radius: 999px; }
@@ -576,8 +578,14 @@ let track = null, trackAt = 0, curArt = '', artFront = $('artA'), artBack = $('a
 
 function setMarquee(el, text) {
   const span = el.querySelector('span');
-  if (span.textContent === text) return;
+  if (span.textContent === text) return false;
   span.textContent = text;
+  fitMarquee(el);
+  return true;
+}
+
+function fitMarquee(el) {
+  const span = el.querySelector('span');
   el.classList.remove('scroll');
   if (opt.still) return;
   requestAnimationFrame(() => {
@@ -588,6 +596,13 @@ function setMarquee(el, text) {
       el.classList.add('scroll');
     }
   });
+}
+
+// Compact: title and artist share one line, so a new title also changes how much
+// room the artist has (and the other way round). Check both whenever one changes.
+function setLine(title, artist) {
+  const a = setMarquee($('title'), title), b = setMarquee($('artist'), artist);
+  if (opt.compact && a !== b) fitMarquee(a ? $('artist') : $('title'));
 }
 
 // Compact: fonts sit differently in their line box (VT323, Cinzel, Rajdhani...), so
@@ -625,8 +640,7 @@ function setArt(url) {
 
 function onTrack(t) {
   track = t; trackAt = performance.now();
-  setMarquee($('title'), t.title || '');
-  setMarquee($('artist'), [t.artist, opt.album && t.album].filter(Boolean).join(' · '));
+  setLine(t.title || '', [t.artist, opt.album && t.album].filter(Boolean).join(' · '));
   setArt(t.art);
   card.classList.toggle('paused', !t.playing);
   card.classList.add('show');
