@@ -425,7 +425,7 @@
      license-style chip as the label, and the equalizer as the input telemetry
      trace (green throttle area, red brake line, pedal bars on the right). The
      progress bar is split into three sectors. */
-  body.iracing { font-family: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif; --frost: .12; }
+  body.iracing { font-family: "Roboto", "Segoe UI", system-ui, sans-serif; --frost: .12; }
   body.iracing #card {
     border-radius: 4px; padding: 14px 18px 14px 14px;
     background: linear-gradient(180deg, rgba(22,28,38,.95), rgba(10,13,19,.95));
@@ -449,7 +449,7 @@
   }
   body.iracing #card.paused #label::before { opacity: 1; }
   body.iracing #title { font-size: 26px; font-weight: 700; line-height: 1.15; margin-top: 7px; }
-  body.iracing #artist { font-size: 17px; font-weight: 600; color: #9fb0c4; }
+  body.iracing #artist { font-size: 17px; font-weight: 500; color: #9fb0c4; }
   body.iracing #eq { min-height: 30px; margin-top: 8px; }
   body.iracing #progress { font-size: 14px; font-weight: 700; color: #cfd8e3; }
   body.iracing #bar {
@@ -617,7 +617,7 @@ if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
 document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
-const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Barlow+Semi+Condensed:wght@600;700', f1: 'Titillium+Web:wght@400;700;900' };
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900' };
 if (FONTS[opt.theme]) {
   const f = document.createElement('link');
   f.rel = 'stylesheet'; f.href = opt.fonts || `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
@@ -900,21 +900,34 @@ function drawSuperstar(w, h, bw, gap, pct) {
   g.strokeStyle = '#e8f6ff'; g.lineWidth = 1.6; g.stroke();
 }
 
-// iRacing: the music as input telemetry. Bass drives the green throttle trace,
-// the highs the red brake line; both scroll to the left, with pedal bars on
-// the right like the in-sim input graph.
+// iRacing: the equalizer as input telemetry. The throttle (green) is the
+// bass and the brake (red) the highs, moving with the music like the bars in
+// the other themes, each scaled between its own recent low and high so the
+// beat swings through the full height. Both traces scroll to the left, with pedal bars on the right like
+// the in-sim input graph.
 const trace = [];
-let traceAt = 0;
+let traceAt = 0, env = [[1, 0], [1, 0]], thr = 0, brk = 0;
 function drawTelemetry(w, h, now) {
   let lo = 0, hi = 0;
-  const half = Math.ceil(opt.bars / 2);
+  const bass = Math.max(1, Math.round(opt.bars / 4)), half = Math.ceil(opt.bars / 2);
   for (let i = 0; i < opt.bars; i++) {
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
-    if (i < half) lo += level[i] / half; else hi += level[i] / (opt.bars - half);
+    if (i < bass) lo += level[i] / bass; else if (i >= half) hi += level[i] / (opt.bars - half);
   }
-  const thr = Math.min(1, lo * 1.35), brk = Math.min(1, Math.max(0, hi - .18) * 2.2);
-  const pedals = opt.compact ? 0 : 28, tw = w - pedals, step = 4, max = Math.ceil(tw / step) + 1;
-  if (now - traceAt > 33) { traceAt = now; trace.push([thr, brk]); if (trace.length > max) trace.splice(0, trace.length - max); }
+  const pedals = opt.compact ? 0 : 28, tw = w - pedals, step = 3, max = Math.ceil(tw / step) + 1;
+  if (trace.length < max) trace.unshift(...Array(max - trace.length).fill([0, 0])); // flat until the first samples scroll in
+  if (now - traceAt > 80) {
+    traceAt = now;
+    // low and high pull together slowly, so the range follows the song
+    const [t, b] = [lo, hi].map((v, k) => {
+      const e = env[k], r = e[1] - e[0];
+      e[1] = Math.max(v, e[1] - r * .02); e[0] = Math.min(v, e[0] + r * .02);
+      return v < .02 ? 0 : Math.min(1, Math.max(0, (v - e[0]) / Math.max(.06, e[1] - e[0]) * .9 + .05));
+    });
+    // like the bars: jump up on a hit, fall back more slowly
+    thr = t > thr ? t : thr + (t - thr) * .3; brk = b > brk ? b : brk + (b - brk) * .3;
+    trace.push([thr, brk]); if (trace.length > max) trace.splice(0, trace.length - max);
+  }
   const y = v => h - 1 - v * (h - 3);
   g.fillStyle = 'rgba(255,255,255,.07)';
   for (const f of [.25, .5, .75]) g.fillRect(0, Math.round(y(f)), tw, 1);
