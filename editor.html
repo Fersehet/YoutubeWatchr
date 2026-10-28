@@ -129,6 +129,15 @@
   [hidden] { display: none !important; }
   .note { font-size: 12px; color: var(--muted); margin: -4px 0 0; }
   .note b { color: var(--fg); font-weight: 600; }
+  /* Online server: account in the header, address and key in the Connection panel */
+  .account { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+  .account b { color: var(--fg); font-weight: 600; }
+  .field { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 12px var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; }
+  .inline button.small { padding: 6px 9px; font-size: 12px; flex: none; }
+  .live { display: inline-flex; align-items: center; gap: 6px; }
+  .live i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .live.on i { background: #2ecc71; box-shadow: 0 0 6px #2ecc71; }
+  button.link { background: none; border: 0; padding: 0; color: var(--fg); text-decoration: underline; font-size: inherit; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -144,6 +153,7 @@
   <header>
     <h1 class="brand"><svg class="brand-mark" viewBox="-2 -2 68 68" width="34" height="34" aria-hidden="true"><defs><mask id="brand-cut"><rect x="-8" y="-8" width="80" height="80" fill="#fff"/><path d="M15 14L53 33L15 52Z" fill="#000" stroke="#000" stroke-width="9" stroke-linejoin="round"/></mask></defs><g mask="url(#brand-cut)" fill="#ff0033"><rect class="bm-bar" x="4" y="22.0" width="6.4" height="22" rx="3.2"/><rect class="bm-bar" x="13" y="13.0" width="6.4" height="40" rx="3.2"/><rect class="bm-bar" x="22" y="18.0" width="6.4" height="30" rx="3.2"/><rect class="bm-bar" x="31" y="5.0" width="6.4" height="56" rx="3.2"/><rect class="bm-bar" x="40" y="15.0" width="6.4" height="36" rx="3.2"/><rect class="bm-bar" x="49" y="10.0" width="6.4" height="46" rx="3.2"/><rect class="bm-bar" x="58" y="24.0" width="6.4" height="18" rx="3.2"/></g><path d="M15 14L53 33L15 52Z" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg><b>Youtube<span>Watchr</span></b><span class="sub">Editor</span></h1>
     <p id="mode-note">Design your overlay, then copy the URL into an OBS Browser Source.</p>
+    <div class="account" id="account" hidden><span>Signed in as <b id="who"></b></span><button type="button" id="logout">Sign out</button></div>
   </header>
 
   <div class="layout">
@@ -164,7 +174,7 @@
           <code id="url">http://127.0.0.1:8974/</code>
           <button class="primary" id="copy" type="button">Copy URL</button>
         </div>
-        <p class="hint">OBS Browser Source size: <b id="size">620 × 200</b>. <span id="obs-hint">Untick <b>Local file</b>, paste the URL and</span> <span id="css-hint">Clear</span> the source's Custom CSS.</p>
+        <p class="hint">OBS Browser Source size: <b id="size">620 × 200</b>. <span id="obs-hint">Untick <b>Local file</b>, paste the URL and</span> <span id="css-hint">Clear</span> the source's Custom CSS.<span id="saved-hint" hidden> The URL stays the same: your changes are saved and show up in OBS right away. <span id="saved"></span></span></p>
       </div>
     </div>
 
@@ -177,6 +187,14 @@
             <button type="button" data-conn="obs" aria-pressed="false">OBS WebSocket</button>
           </div>
         </div>
+        <div class="row online-row"><span>Server address</span>
+          <div class="inline"><code class="field" id="srvAddr"></code><button type="button" class="small" data-copy="srvAddr">Copy</button></div>
+        </div>
+        <div class="row online-row"><span>Extension key</span>
+          <div class="inline"><code class="field" id="sendKey">••••••••••••</code><button type="button" class="small" data-copy="sendKey">Copy</button></div>
+        </div>
+        <p class="note online-row">Enter both in the YoutubeWatchr extension. <span class="live" id="live"><i></i><span>Waiting for music</span></span></p>
+        <p class="note online-row">Key or OBS URL leaked? <button type="button" class="link" id="renewSend">New key</button> · <button type="button" class="link" id="renewOverlay">New OBS URL</button>. The old one stops working.</p>
         <p class="note local-row">The extension or the userscript sends the music to the YoutubeWatchr server on this computer (<code>http://127.0.0.1:8974</code>).</p>
         <div class="row obs-row"><span>OBS port</span><input type="text" id="obsPort" inputmode="numeric" placeholder="4455" aria-label="OBS WebSocket port"></div>
         <div class="row obs-row"><span>Password</span><input type="password" id="obsPw" autocomplete="off" placeholder="Empty if authentication is off" aria-label="OBS WebSocket password"></div>
@@ -294,20 +312,17 @@ const DEFAULTS = {
   conn: 'server', obsPort: 4455, obsPw: '',
 };
 const KEY = 'ytw-editor';
-// When another page embeds this editor as a preview, the overlay comes inlined (no local server).
+// When this page is the online preview, the overlay is embedded (no local server).
 const EMBEDDED = typeof window.OVERLAY_SRC === 'string';
 // Served by server.js at /editor, or opened as a file (or from any static host).
 const SERVED = !EMBEDDED && location.pathname === '/editor';
 if (!SERVED && !EMBEDDED) DEFAULTS.conn = 'obs';
-// A server that hosts this editor can plug in by setting window.YTW_HOST before this script:
-// start({ render }) resolves to { overlayUrl, editor } (or null to stop), save(query, state)
-// keeps the settings and sync(state) updates its own controls. The OBS URL then never changes.
-const HOST = window.YTW_HOST || null;
-let HOSTED = null;
+// Signed in on the online server: keys and saved settings (see loadAccount)
+let ACCOUNT = null;
 
-// Where OBS loads the overlay from: the hosting server, the local server, or overlay.html next to this file.
+// Where OBS loads the overlay from: your page on the online server, the local server, or overlay.html next to this file.
 function base() {
-  if (HOSTED) return HOSTED.overlayUrl;
+  if (ACCOUNT) return location.origin + '/overlay/' + ACCOUNT.overlayKey;
   if (state.conn === 'server') return SERVED ? location.origin + '/' : 'http://127.0.0.1:8974/';
   if (EMBEDDED) return 'file:///…/YoutubeWatchr/overlay.html';
   return new URL('overlay.html', location.href).href;
@@ -348,7 +363,7 @@ function params(forObs) {
     if (s.obsPort !== 4455) p.set('port', s.obsPort);
     if (s.obsPw) p.set('pw', s.obsPw);
   } else if (!forObs && !SERVED && !s.demo) p.set('server', 'http://127.0.0.1:8974');
-  if (!forObs && HOSTED && !s.demo) p.set('preview', '1'); // the editor's own options, not the saved ones
+  if (!forObs && ACCOUNT && !s.demo) p.set('preview', '1'); // the editor's own options, not the saved ones
   if (!forObs && s.demo) p.set('demo', '1');
   const str = p.toString();
   return str ? '?' + str : '';
@@ -360,12 +375,12 @@ function obsSize() {
   return [Math.ceil(w * state.scale), Math.ceil(h * state.scale)];
 }
 
-let reloadTimer = 0, obsUrl = '';
+let reloadTimer = 0, saveTimer = 0, obsUrl = '';
 function render() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
-  // Hosted, the OBS URL has no options: the host keeps them, so OBS picks up every change
-  obsUrl = HOSTED ? base() : base() + params(true);
-  if (HOSTED) HOST.save(params(true), state);
+  // Online the OBS URL has no options: they are saved on the server, so OBS picks up every change
+  obsUrl = ACCOUNT ? base() : base() + params(true);
+  if (ACCOUNT) save();
   // don't show the password on screen, the copied URL has it
   $('url').textContent = state.obsPw ? obsUrl.replace('pw=' + encodeURIComponent(state.obsPw), 'pw=' + '•'.repeat(8)) : obsUrl;
   const [w, h] = obsSize();
@@ -375,10 +390,20 @@ function render() {
   reloadTimer = setTimeout(() => {
     const q = params(false);
     if (EMBEDDED) ov.srcdoc = '<script>window.DEMO_QUERY=' + JSON.stringify(q || '?') + '<\/script>' + window.OVERLAY_SRC;
-    else ov.src = (HOSTED && !state.demo ? base() : 'overlay.html') + q;
+    else ov.src = (ACCOUNT && !state.demo ? base() : 'overlay.html') + q;
     $('toggle').textContent = 'Pause';
     fit();
   }, 150);
+}
+
+function save() {
+  clearTimeout(saveTimer);
+  $('saved').textContent = '';
+  saveTimer = setTimeout(async () => {
+    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: params(true), editor: state }) }).catch(() => null);
+    if (r && r.status === 401) return location.replace('/login.html?next=/editor');
+    $('saved').textContent = r && r.ok ? 'Saved.' : 'Could not save.';
+  }, 500);
 }
 
 function fit() {
@@ -424,7 +449,9 @@ function syncControls() {
   document.querySelectorAll('[data-accentmode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.accentmode === s.accentMode));
   document.querySelectorAll('[data-conn]').forEach(b => b.setAttribute('aria-pressed', b.dataset.conn === s.conn));
   document.querySelectorAll('.obs-row').forEach(el => { el.hidden = s.conn !== 'obs'; });
-  document.querySelectorAll('.local-row').forEach(el => { el.hidden = !!HOSTED || s.conn !== 'server'; });
+  document.querySelectorAll('.online-row').forEach(el => { el.hidden = !ACCOUNT || s.conn !== 'server'; });
+  document.querySelectorAll('.local-row').forEach(el => { el.hidden = !!ACCOUNT || s.conn !== 'server'; });
+  $('saved-hint').hidden = !ACCOUNT;
   if (document.activeElement !== $('obsPort')) $('obsPort').value = s.obsPort === 4455 ? '' : s.obsPort;
   if ($('obsPw').value !== s.obsPw) $('obsPw').value = s.obsPw;
   $('obs-hint').hidden = s.conn !== 'obs' || SERVED;
@@ -452,7 +479,6 @@ function syncControls() {
   $('next').disabled = $('toggle').disabled = !s.demo;
   $('demo').disabled = EMBEDDED;
   stage.classList.toggle('checker', s.checker);
-  if (HOSTED && HOST.sync) HOST.sync(s);
 }
 
 $('next').onclick = () => ov.contentWindow.postMessage('next', '*');
@@ -467,7 +493,38 @@ $('copy').onclick = e => {
   const select = () => { const r = document.createRange(); r.selectNodeContents($('url')); getSelection().removeAllRanges(); getSelection().addRange(r); };
   try { navigator.clipboard.writeText(text).then(done, select); } catch { select(); }
 };
-if (EMBEDDED) $('mode-note').textContent = 'Preview with demo songs. Download YoutubeWatchr and open editor.html to use it with your own music.';
+// ---- online server: account, keys, sign out ------------------------------------------
+async function loadAccount() {
+  const r = await fetch('/api/account', { cache: 'no-store' }).catch(() => null);
+  if (r && r.status === 401) return location.replace('/login.html?next=/editor'), null;
+  return r && r.ok ? r.json() : null;
+}
+function showAccount() {
+  $('account').hidden = false;
+  $('who').textContent = ACCOUNT.user;
+  $('srvAddr').textContent = location.origin;
+  $('sendKey').textContent = ACCOUNT.sendKey.slice(0, 4) + '•'.repeat(12);
+  $('live').classList.toggle('on', ACCOUNT.live);
+  $('live').lastChild.textContent = ACCOUNT.live ? 'Music is coming in' : 'Waiting for music';
+  $('mode-note').textContent = 'Design your overlay, then add its URL to OBS once. Changes show up in OBS by themselves.';
+}
+document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => {
+  const text = b.dataset.copy === 'sendKey' ? ACCOUNT.sendKey : $(b.dataset.copy).textContent;
+  navigator.clipboard.writeText(text).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1500); });
+});
+async function renew(which, question) {
+  if (!confirm(question)) return;
+  const r = await fetch('/api/keys', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ which }) });
+  if (r.ok) { ACCOUNT = await r.json(); showAccount(); render(); }
+}
+$('renewSend').onclick = () => renew('send', 'Make a new extension key? The extension stops sending until you enter the new one.');
+$('renewOverlay').onclick = () => renew('overlay', 'Make a new OBS URL? The old URL stops working, so you need to paste the new one into OBS.');
+$('logout').onclick = async () => {
+  await fetch('/api/logout', { method: 'POST' }).catch(() => {});
+  location.replace('/login.html');
+};
+
+if (EMBEDDED) $('mode-note').textContent = 'Online preview with demo songs. Download YoutubeWatchr and open editor.html to use it with your own music.';
 
 // ---- mock scene ------------------------------------------------------------------
 const cv = $('scene'), g = cv.getContext('2d');
@@ -514,11 +571,16 @@ addEventListener('resize', () => { fit(); if (reduce) scene(0); });
 })();
 
 (async () => {
-  if (HOST) {
-    HOSTED = await HOST.start({ render });
-    if (!HOSTED) return;
-    // the host remembers your settings, so they follow you to any browser
-    if (HOSTED.editor) state = { ...DEFAULTS, ...HOSTED.editor, demo: state.demo, checker: state.checker };
+  if (SERVED) {
+    const me = await fetch('/api/me', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
+    if (me && me.online) {
+      ACCOUNT = await loadAccount();
+      if (!ACCOUNT) return;
+      // the editor remembers your settings on the server, so they follow you to any browser
+      if (ACCOUNT.editor) state = { ...DEFAULTS, ...ACCOUNT.editor, demo: state.demo, checker: state.checker };
+      showAccount();
+      setInterval(async () => { const a = await loadAccount(); if (a) { ACCOUNT = a; showAccount(); } }, 5000);
+    }
   }
   render();
 })();

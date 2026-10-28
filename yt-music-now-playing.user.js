@@ -15,8 +15,8 @@
 (function () {
   'use strict';
 
-  // The server on this computer (if you changed its port, change it here too).
-  // KEY stays empty unless your server asks for one.
+  // The server on this computer. For your online server use its address, e.g.
+  // 'https://ytw.example.com', and put the key from the editor (Connection) into KEY.
   const SERVER = 'http://127.0.0.1:8974';
   const KEY = '';
   const BANDS = 32;          // number of equalizer bars sent to the overlay
