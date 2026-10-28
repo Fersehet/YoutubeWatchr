@@ -509,6 +509,44 @@
   body.compact.f1 #title { font-weight: 900; }
   body.compact.f1 { --cfs: 19px; }
 
+  /* theme=pinkribbon: breast cancer awareness. Light blush card with dark rose
+     text, the pink ribbon as the label dot and as a large watermark, and the
+     rounded bars of the glass theme, without the glow (it blurs on a light card). */
+  body.pinkribbon {
+    font-family: "Lato", "Segoe UI", system-ui, sans-serif;
+    --frost: 0; --bar1: var(--accent); --bar2: rgba(255,255,255,.95); --cap: rgba(255,255,255,0); --bar-round: 99; --bar-glow: 0;
+    --ribbon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 32'%3E%3Cpath d='M4.5 30 L15 14.5 C18.5 9.5 17 2.5 12 2.5 C7 2.5 5.5 9.5 9 14.5 L19.5 30' fill='none' stroke='%23000' stroke-width='4.2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  body.pinkribbon #card {
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255,241,246,.97), rgba(252,218,231,.97));
+    box-shadow: 0 10px 34px rgba(80,10,40,.35), inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  body.pinkribbon #card::after {
+    content: ""; position: absolute; right: 18px; top: -10px; width: 110px; height: 150px; pointer-events: none;
+    background: var(--accent); opacity: .12; transform: rotate(12deg);
+    -webkit-mask: var(--ribbon) center / contain no-repeat; mask: var(--ribbon) center / contain no-repeat;
+  }
+  body.pinkribbon #glow { display: none; }
+  body.pinkribbon #art-wrap { border-radius: 10px; box-shadow: 0 6px 18px rgba(120,20,60,.3); }
+  body.pinkribbon #label { color: color-mix(in srgb, var(--accent), #6b0f35 35%); }
+  body.pinkribbon #label::before {
+    width: 10px; height: 14px; border-radius: 0; box-shadow: none; background: var(--accent);
+    -webkit-mask: var(--ribbon) center / contain no-repeat; mask: var(--ribbon) center / contain no-repeat;
+  }
+  body.pinkribbon #card.paused #label::before { opacity: .6; }
+  body.pinkribbon #title { font-family: "Playfair Display", Georgia, serif; font-size: 24px; font-weight: 700; color: #4a1030; }
+  body.pinkribbon #artist, body.pinkribbon #progress { color: #8a3a5c; }
+  body.pinkribbon #bar { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+  body.pinkribbon #fill { background: var(--accent); }
+  body.compact.pinkribbon #card::after { right: 40px; top: -14px; width: 56px; height: 88px; }
+  body.compact.pinkribbon #art-wrap { border-radius: 50%; box-shadow: none; background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--accent) 18%, transparent) 0); }
+  body.compact.pinkribbon #artist { border-left-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+  body.compact.pinkribbon { --cfs: 18px; }
+  /* without the light card the dark text would vanish on the stream */
+  body.no-card.pinkribbon #title { color: #fff; }
+  body.no-card.pinkribbon #artist, body.no-card.pinkribbon #progress, body.no-card.pinkribbon #label { color: #ffd1e2; }
+
   /* compact versions keep the hard edges */
   body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
   body.compact.cs #label { display: none; }
@@ -584,7 +622,7 @@
 const SAVED = typeof window.YTW_SAVED === 'string' && !location.search;
 const q = new URLSearchParams(SAVED ? window.YTW_SAVED : location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 ("minimal" = classic + compact)
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
@@ -615,16 +653,16 @@ const opt = {
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
-document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
-const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900' };
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900', pinkribbon: 'Lato:wght@400;700&family=Playfair+Display:wght@700' };
 if (FONTS[opt.theme]) {
   const f = document.createElement('link');
   f.rel = 'stylesheet'; f.href = opt.fonts || `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
   document.head.appendChild(f);
 }
 // Game themes use their own palette instead of colors picked from the cover.
-const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'] }[opt.theme];
+const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'], pinkribbon: ['#e0457b', '#f7a1c0'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
