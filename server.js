@@ -1,5 +1,5 @@
 // YoutubeWatchr server: passes the music from YouTube Music on to the OBS browser source.
-// No dependencies: run with `node server.js` (Node 18+).
+// No dependencies: run with `npm start` or `node server.js` (Node 18+).
 //
 // Two ways to run it (see .env.example):
 // - Online, with ADMIN_PASSWORD set: on your own server behind a reverse proxy. The editor needs a
@@ -179,7 +179,7 @@ async function handle(req, res) {
   }
   if (get && p === '/overlay.html') return sendFile(res, path.join(ROOT, 'overlay.html'));
   if (get && p === '/login.html') return sendFile(res, path.join(ROOT, 'login.html'));
-  if (p === '/api/me') return json(res, 200, { online: true, user, loginEnabled: auth.enabled });
+  if (p === '/api/me') return json(res, 200, { online: true, user, loginEnabled: auth.enabled, website: !!siteFile('/') });
   if (p === '/api/login' && req.method === 'POST') {
     let body = {};
     try { body = await readBody(req, 4096); } catch {}

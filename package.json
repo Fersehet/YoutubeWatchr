@@ -1,0 +1,11 @@
+{
+  "name": "youtubewatchr",
+  "private": true,
+  "description": "Shows the song playing on YouTube Music as an overlay in OBS.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
