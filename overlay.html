@@ -79,7 +79,7 @@
   #card.paused #label::before { box-shadow: none; opacity: .5; }
 
   .marquee { overflow: hidden; white-space: nowrap; }
-  .marquee span { display: inline-block; padding-right: 40px; }
+  .marquee span { display: inline-block; }
   .marquee.scroll span { animation: var(--mq) var(--dur, 10s) linear infinite; } /* keyframes come from fitMarquees() */
   #title { font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.25; }
   #artist { font-size: 15px; color: var(--muted); margin-top: 2px; }
@@ -278,7 +278,6 @@
   body.compact #title { margin: 0; flex: 1 1 0; min-width: 0; max-width: max-content; }
   body.compact #artist { margin: 0; flex: 1 1 0; min-width: 40px; max-width: max-content; }
   body.compact #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
-  body.compact .marquee span { padding-right: 0; }
   body.compact #card::before, body.compact #card::after { border-radius: 999px; }
   /* glass: thinner rim on the pill */
   body.compact.glass #card { padding: 8px 20px 8px 8px; }
@@ -579,7 +578,7 @@
   /* ---- still=1: nothing moves. No equalizer, no scrolling text (long names
      end in "…"), no spinning record, no fades; progress ticks once a second. */
   body.still *, body.still *::before, body.still *::after { animation: none !important; transition: none !important; }
-  body.still .marquee span { display: block; padding-right: 0; overflow: hidden; text-overflow: ellipsis; }
+  body.still .marquee span { display: block; overflow: hidden; text-overflow: ellipsis; }
 
   /* ---- card=0 works in every theme: drop the panel, keep the content ------
      Placed last so it wins over each theme's own card rules. */
@@ -707,7 +706,8 @@ function setMarquee(el, text) {
   return true;
 }
 
-// Long names scroll at the same speed (px/s), so a long title and a short artist
+// Only names that don't fit scroll, and only until their last letter reaches the
+// right edge. Long names scroll at the same speed (px/s), so a long title and a short artist
 // don't race each other. Each line has its own loop: a shorter one starts again
 // as soon as it is done instead of waiting for the other.
 const MQ_SPEED = 30, MQ_PAUSE = 1.5, mqStyle = document.head.appendChild(document.createElement('style'));
@@ -717,8 +717,9 @@ function fitMarquees() {
   if (opt.still) return;
   requestAnimationFrame(() => {
     const dist = els.map(el => {
-      const overflow = el.querySelector('span').scrollWidth - el.clientWidth;
-      return overflow > 0 ? overflow + 40 : 0;
+      // measured on screen, so undo scale= (translateX is in unscaled px)
+      const overflow = (el.querySelector('span').getBoundingClientRect().right - el.getBoundingClientRect().right) / opt.scale;
+      return overflow > 0.5 ? Math.round(overflow * 10) / 10 : 0;
     });
     const dur = dist.map(d => 2 * MQ_PAUSE + d / MQ_SPEED);
     const pct = (t, i) => (t / dur[i] * 100).toFixed(2) + '%';
@@ -757,6 +758,7 @@ function centerCompactText() {
 }
 document.fonts.ready.then(centerCompactText);
 document.fonts.addEventListener('loadingdone', centerCompactText);
+document.fonts.addEventListener('loadingdone', fitMarquees); // web fonts change the text width
 
 function setArt(url) {
   if (!url || url === curArt) return;
