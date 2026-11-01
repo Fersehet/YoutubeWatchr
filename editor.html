@@ -434,9 +434,17 @@ const T = {
   },
 };
 const LANGS = ['de', 'en', 'ru', 'fr'];
-let lang = '';
-try { lang = localStorage.getItem('yw-lang') || ''; } catch {}
-if (!LANGS.includes(lang)) lang = LANGS.find(l => (navigator.language || '').toLowerCase().startsWith(l)) || 'en';
+// The language comes from the link (?lang=de), then from the last choice, otherwise English.
+let lang = new URLSearchParams(location.search).get('lang') || '';
+try { if (!LANGS.includes(lang)) lang = localStorage.getItem('yw-lang') || ''; } catch {}
+if (!LANGS.includes(lang)) lang = 'en';
+// Shows the language in the address bar, so a copied link opens in the same language
+function langToUrl() {
+  if (EMBEDDED) return;
+  const u = new URL(location.href);
+  u.searchParams.set('lang', lang);
+  try { history.replaceState(null, '', u); } catch {}
+}
 const t = key => T[lang][key] ?? T.en[key];
 function applyLang() {
   document.documentElement.lang = lang;
@@ -682,11 +690,13 @@ $('lang').append(...LANGS.map(l => new Option(l.toUpperCase(), l, false, l === l
 $('lang').onchange = e => {
   lang = e.target.value;
   try { localStorage.setItem('yw-lang', lang); } catch {}
+  langToUrl();
   applyLang();
   if (ACCOUNT) showAccount();
   syncControls();
   $('toggle').textContent = t(paused ? 'play' : 'pause');
 };
+langToUrl();
 applyLang();
 
 // ---- mock scene ------------------------------------------------------------------
