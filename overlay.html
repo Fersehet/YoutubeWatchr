@@ -510,7 +510,8 @@
 
   /* theme=pinkribbon: breast cancer awareness. Light blush card with dark rose
      text, the pink ribbon as the label dot and as a large watermark, and the
-     rounded bars of the glass theme, without the glow (it blurs on a light card). */
+     rounded bars of the glass theme, without the glow (it blurs on a light card)
+     and without pink shadows. */
   body.pinkribbon {
     font-family: "Lato", "Segoe UI", system-ui, sans-serif;
     --frost: 0; --bar1: var(--accent); --bar2: rgba(255,255,255,.95); --cap: rgba(255,255,255,0); --bar-round: 99; --bar-glow: 0;
@@ -519,7 +520,7 @@
   body.pinkribbon #card {
     border-radius: 16px;
     background: linear-gradient(135deg, rgba(255,241,246,.97), rgba(252,218,231,.97));
-    box-shadow: 0 10px 34px rgba(80,10,40,.35), inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow: 0 10px 34px rgba(0,0,0,.35), inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
   }
   body.pinkribbon #card::after {
     content: ""; position: absolute; right: 18px; top: -10px; width: 110px; height: 150px; pointer-events: none;
@@ -527,7 +528,7 @@
     -webkit-mask: var(--ribbon) center / contain no-repeat; mask: var(--ribbon) center / contain no-repeat;
   }
   body.pinkribbon #glow { display: none; }
-  body.pinkribbon #art-wrap { border-radius: 10px; box-shadow: 0 6px 18px rgba(120,20,60,.3); }
+  body.pinkribbon #art-wrap { border-radius: 10px; box-shadow: none; }
   body.pinkribbon #label { color: color-mix(in srgb, var(--accent), #6b0f35 35%); }
   body.pinkribbon #label::before {
     width: 10px; height: 14px; border-radius: 0; box-shadow: none; background: var(--accent);
