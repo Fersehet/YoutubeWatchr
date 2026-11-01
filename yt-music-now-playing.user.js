@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YT Music → OBS Now Playing
 // @namespace    yt-music-obs
-// @version      1.1.0
+// @version      1.1.1
 // @description  Sends the current YouTube Music track and a live audio spectrum to your YoutubeWatchr server.
 // @match        https://music.youtube.com/*
 // @grant        GM_xmlhttpRequest
@@ -50,6 +50,21 @@
     return url ? url.replace(/=w\d+-h\d+[^&?]*/, '=w544-h544-l90-rj') : '';
   }
 
+  // With gapless playback YT Music plays the next song in the same <video>
+  // without resetting it, so currentTime and duration keep counting across
+  // songs. The player bar's slider always shows the time of the current song:
+  // whenever the video clock drifts more than 1.5 s from it, re-align.
+  let offset = 0;
+  function songTime(v) {
+    if (!v) return { position: 0, duration: 0 };
+    const slider = $('ytmusic-player-bar #progress-bar');
+    const now = parseFloat(slider?.getAttribute('aria-valuenow'));
+    const max = parseFloat(slider?.getAttribute('aria-valuemax'));
+    if (isFinite(now) && Math.abs(v.currentTime - offset - now) > 1.5) offset = v.currentTime - now;
+    const duration = max > 0 ? max : (isFinite(v.duration) ? v.duration - offset : 0);
+    return { position: Math.max(0, v.currentTime - offset), duration };
+  }
+
   function readTrack() {
     const v = video();
     const md = (unsafeWindow.navigator.mediaSession || navigator.mediaSession || {}).metadata;
@@ -68,8 +83,7 @@
       album: md?.album || (byline.split('•')[1] || '').trim(),
       art: bigArt(art || domArt),
       playing: !!v && !v.paused && !v.ended,
-      position: v ? v.currentTime : 0,
-      duration: v && isFinite(v.duration) ? v.duration : 0,
+      ...songTime(v),
       ts: Date.now(),
     };
   }
