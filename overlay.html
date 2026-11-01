@@ -556,6 +556,51 @@
   body.no-card.pinkribbon #title { color: #fff; }
   body.no-card.pinkribbon #artist, body.no-card.pinkribbon #progress, body.no-card.pinkribbon #label { color: #ffd1e2; }
 
+  /* theme=macos: a dark macOS window. Title bar with the three window buttons and
+     the label as window title, system font (SF on a Mac, Segoe UI on Windows),
+     rounded bars in the cover colors, white progress like the Music app. */
+  body.macos {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --frost: 0; --cap: rgba(255,255,255,0); --bar-round: 99; --bar-glow: 0;
+    --lights: radial-gradient(circle 6px at 20px 14px, #ff5f57 5.4px, rgba(0,0,0,.18) 5.6px, transparent 6px),
+              radial-gradient(circle 6px at 40px 14px, #febc2e 5.4px, rgba(0,0,0,.18) 5.6px, transparent 6px),
+              radial-gradient(circle 6px at 60px 14px, #28c840 5.4px, rgba(0,0,0,.18) 5.6px, transparent 6px);
+  }
+  body.macos #card {
+    padding: 40px 18px 14px 14px; border-radius: 12px; background: rgba(32,32,34,.96);
+    box-shadow: 0 18px 48px rgba(0,0,0,.5), 0 0 0 .5px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.12);
+  }
+  body.macos #card::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 28px; pointer-events: none;
+    background: var(--lights), linear-gradient(#3a3a3c, #323234); box-shadow: inset 0 -1px 0 rgba(0,0,0,.6);
+  }
+  body.macos #glow { display: none; }
+  body.macos #info { position: static; } /* lets the label sit in the title bar */
+  body.macos #label {
+    position: absolute; left: 80px; right: 80px; top: 0; height: 28px; justify-content: center;
+    font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: rgba(255,255,255,.62);
+  }
+  body.macos #label::before { display: none; }
+  body.macos #art-wrap { width: 120px; height: 120px; border-radius: 8px; }
+  body.macos #title { font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
+  body.macos #artist { font-size: 15px; font-weight: 500; }
+  body.macos #artist, body.macos #progress { color: rgba(255,255,255,.6); }
+  body.macos #bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); }
+  body.macos #fill { border-radius: 2px; background: rgba(255,255,255,.85); }
+  /* compact: a small window, slim title bar with smaller buttons above the line */
+  body.compact.macos #card { height: 64px; padding: 18px 20px 6px 10px; border-radius: 12px; }
+  body.compact.macos #card::before {
+    height: 16px; border-radius: 0;
+    background: radial-gradient(circle 4px at 13px 8px, #ff5f57 3.5px, transparent 4px),
+                radial-gradient(circle 4px at 26px 8px, #febc2e 3.5px, transparent 4px),
+                radial-gradient(circle 4px at 39px 8px, #28c840 3.5px, transparent 4px), linear-gradient(#3a3a3c, #323234);
+  }
+  body.compact.macos #art-wrap { width: 40px; height: 40px; border-radius: 50%; }
+  body.compact.macos:not(.no-progress) #art-wrap { background: conic-gradient(#fff calc(var(--p, 0) * 1%), rgba(255,255,255,.18) 0); }
+  /* card=0: no title bar, so the label goes back above the title */
+  body.no-card.macos:not(.compact) #card { padding-top: 16px; }
+  body.no-card.macos #label { position: static; height: auto; justify-content: flex-start; }
+
   /* compact versions keep the hard edges */
   body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
   body.compact.cs #label { display: none; }
@@ -631,7 +676,7 @@
 const SAVED = typeof window.YTW_SAVED === 'string' && !location.search;
 const q = new URLSearchParams(SAVED ? window.YTW_SAVED : location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon ("minimal" = classic + compact)
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon | macos ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
@@ -662,7 +707,7 @@ const opt = {
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
-document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon', 'macos'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
 const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900', pinkribbon: 'Lato:wght@400;700&family=Playfair+Display:wght@700' };
 if (FONTS[opt.theme]) {
