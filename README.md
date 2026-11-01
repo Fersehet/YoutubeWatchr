@@ -52,8 +52,6 @@ You need a server with **[Docker](https://docs.docker.com/engine/install/)** (or
 
 3. **Sign in.** Open `https://ytw.example.com/editor` and sign in with the user and password from `.env`.
 
-   <p align="center"><img src="docs/login.png" alt="The sign-in page of the YoutubeWatchr editor" width="480"></p>
-
 4. **Load the extension** on the PC where you listen to music.
    - **Chrome, Edge, Brave, Opera:** download YoutubeWatchr there too (**Code → Download ZIP** on this page), open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension` folder.
    - **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `extension/manifest.json`. Firefox removes it again when it closes.
