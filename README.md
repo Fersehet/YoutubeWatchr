@@ -16,6 +16,8 @@ Show the song you're playing on **YouTube Music** in your OBS stream: cover, tit
 - Host it on your own server with a login, like [FaceitWatchr](https://github.com/Fersehet/FaceitWatchr): one OBS URL that never changes, and your changes show up in OBS right away
 - Or run it only on your own computer, without an account: with just the browser extension through OBS WebSocket, or with a small local server
 
+> **Coming later:** support for Spotify, Deezer and Apple Music is planned. For now YoutubeWatchr works with YouTube Music.
+
 ## Setup
 
 There are two ways to run YoutubeWatchr:
