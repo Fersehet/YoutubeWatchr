@@ -79,7 +79,7 @@
   #card.paused #label::before { box-shadow: none; opacity: .5; }
 
   .marquee { overflow: hidden; white-space: nowrap; }
-  .marquee span { display: inline-block; padding-right: 40px; }
+  .marquee span { display: inline-block; }
   .marquee.scroll span { animation: var(--mq) var(--dur, 10s) linear infinite; } /* keyframes come from fitMarquees() */
   #title { font-size: 22px; font-weight: 700; margin-top: 4px; line-height: 1.25; }
   #artist { font-size: 15px; color: var(--muted); margin-top: 2px; }
@@ -280,7 +280,6 @@
   body.compact #title { margin: 0; flex: 1 1 0; min-width: 0; max-width: max-content; }
   body.compact #artist { margin: 0; flex: 1 1 0; min-width: 40px; max-width: max-content; }
   body.compact #artist { padding-left: 12px; border-left: 1px solid rgba(255,255,255,.25); }
-  body.compact .marquee span { padding-right: 0; }
   body.compact #card::before, body.compact #card::after { border-radius: 999px; }
   /* glass: thinner rim on the pill */
   body.compact.glass #card { padding: 8px 20px 8px 8px; }
@@ -520,7 +519,8 @@
 
   /* theme=pinkribbon: breast cancer awareness. Light blush card with dark rose
      text, the pink ribbon as the label dot and as a large watermark, and the
-     rounded bars of the glass theme, without the glow (it blurs on a light card). */
+     rounded bars of the glass theme, without the glow (it blurs on a light card)
+     and without pink shadows. */
   body.pinkribbon {
     font-family: "Lato", "Segoe UI", system-ui, sans-serif;
     --frost: 0; --bar1: var(--accent); --bar2: rgba(255,255,255,.95); --cap: rgba(255,255,255,0); --bar-round: 99; --bar-glow: 0;
@@ -529,7 +529,7 @@
   body.pinkribbon #card {
     border-radius: 16px;
     background: linear-gradient(135deg, rgba(255,241,246,.97), rgba(252,218,231,.97));
-    box-shadow: 0 10px 34px rgba(80,10,40,.35), inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
+    box-shadow: 0 10px 34px rgba(0,0,0,.35), inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent);
   }
   body.pinkribbon #card::after {
     content: ""; position: absolute; right: 18px; top: -10px; width: 110px; height: 150px; pointer-events: none;
@@ -537,7 +537,7 @@
     -webkit-mask: var(--ribbon) center / contain no-repeat; mask: var(--ribbon) center / contain no-repeat;
   }
   body.pinkribbon #glow { display: none; }
-  body.pinkribbon #art-wrap { border-radius: 10px; box-shadow: 0 6px 18px rgba(120,20,60,.3); }
+  body.pinkribbon #art-wrap { border-radius: 10px; box-shadow: none; }
   body.pinkribbon #label { color: color-mix(in srgb, var(--accent), #6b0f35 35%); }
   body.pinkribbon #label::before {
     width: 10px; height: 14px; border-radius: 0; box-shadow: none; background: var(--accent);
@@ -588,7 +588,7 @@
   /* ---- still=1: nothing moves. No equalizer, no scrolling text (long names
      end in "…"), no spinning record, no fades; progress ticks once a second. */
   body.still *, body.still *::before, body.still *::after { animation: none !important; transition: none !important; }
-  body.still .marquee span { display: block; padding-right: 0; overflow: hidden; text-overflow: ellipsis; }
+  body.still .marquee span { display: block; overflow: hidden; text-overflow: ellipsis; }
 
   /* ---- card=0 works in every theme: drop the panel, keep the content ------
      Placed last so it wins over each theme's own card rules. */
@@ -716,7 +716,8 @@ function setMarquee(el, text) {
   return true;
 }
 
-// Long names scroll at the same speed (px/s), so a long title and a short artist
+// Only names that don't fit scroll, and only until their last letter reaches the
+// right edge. Long names scroll at the same speed (px/s), so a long title and a short artist
 // don't race each other. Each line has its own loop: a shorter one starts again
 // as soon as it is done instead of waiting for the other.
 const MQ_SPEED = 30, MQ_PAUSE = 1.5, mqStyle = document.head.appendChild(document.createElement('style'));
@@ -726,8 +727,9 @@ function fitMarquees() {
   if (opt.still) return;
   requestAnimationFrame(() => {
     const dist = els.map(el => {
-      const overflow = el.querySelector('span').scrollWidth - el.clientWidth;
-      return overflow > 0 ? overflow + 40 : 0;
+      // measured on screen, so undo scale= (translateX is in unscaled px)
+      const overflow = (el.querySelector('span').getBoundingClientRect().right - el.getBoundingClientRect().right) / opt.scale;
+      return overflow > 0.5 ? Math.round(overflow * 10) / 10 : 0;
     });
     const dur = dist.map(d => 2 * MQ_PAUSE + d / MQ_SPEED);
     const pct = (t, i) => (t / dur[i] * 100).toFixed(2) + '%';
@@ -766,6 +768,7 @@ function centerCompactText() {
 }
 document.fonts.ready.then(centerCompactText);
 document.fonts.addEventListener('loadingdone', centerCompactText);
+document.fonts.addEventListener('loadingdone', fitMarquees); // web fonts change the text width
 
 function setArt(url) {
   if (!url || url === curArt) return;
