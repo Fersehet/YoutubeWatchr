@@ -42,7 +42,7 @@ You need a server with **[Docker](https://docs.docker.com/engine/install/)** (or
    ADMIN_PASSWORD=a-long-password
    ```
 
-   Then start it with `docker compose up -d` (or `node server.js`). It listens on port `8974`.
+   Then start it with `docker compose up -d` (or `npm start`). It listens on port `8974`.
 
 2. **Put it behind your domain.** In Nginx Proxy Manager, add a **Proxy Host**:
    - **Domain Names:** your domain, e.g. `ytw.example.com`
@@ -183,13 +183,13 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 - **Nothing shows up in OBS (local server):** check that the server window is still open, and that the extension shows **Connected to the server** or the userscript is on for music.youtube.com (the Tampermonkey icon shows a "1" on that tab). Reload YouTube Music.
 - **The equalizer moves but not with the music:** click once on the YouTube Music page.
 - **YouTube Music goes quiet:** click once on the page. If it stays quiet, turn the extension or userscript off, reload, and open an issue.
-- **Port 8974 is already in use:** set another port, for example `PORT=9000` in `.env` (on Windows without `.env`: `set PORT=9000` before `node server.js`), and use the same port in the extension or at the top of the userscript.
+- **Port 8974 is already in use:** set another port, for example `PORT=9000` in `.env` (on Windows without `.env`: `set PORT=9000` before `npm start`), and use the same port in the extension or at the top of the userscript.
 
 ## Updating
 
 ```bash
 git pull
-docker compose restart   # or start node server.js again
+docker compose restart   # or run npm start again
 ```
 
 Your keys and saved settings live in `data/` and are kept. Reload the extension on `chrome://extensions` after an update.

@@ -89,6 +89,8 @@
   #progress { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
   #bar { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.15); overflow: hidden; }
   #fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  /* the gradient spans the whole bar, the fill only uncovers it, so the colors don't wander */
+  #bar #fill { background-size: calc(10000% / max(var(--p, 100), .01)) 100%; }
   body.no-progress #progress { display: none; }
 
   /* ---- theme=glass: Apple-style liquid glass ------------------------------
@@ -416,8 +418,15 @@
   body.compact.truedamage #vinyl { box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
   /* progress ring in the colors of the card's progress line instead of teal */
   body.compact.truedamage #art-wrap {
-    background: conic-gradient(#ff3b3b, #ff7a2a calc(var(--p, 0) * .6%), #ffc94a calc(var(--p, 0) * 1%), rgba(70,60,170,.32) 0);
+    background: rgba(70,60,170,.32);
   }
+  body.compact.truedamage #art-wrap::before {
+    /* the colors sit where they are at the song's end, the mask only uncovers them */
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(#ff3b3b, #ff7a2a 60%, #ffc94a);
+    -webkit-mask-image: conic-gradient(#000 calc(var(--p, 0) * 1%), transparent 0); mask-image: conic-gradient(#000 calc(var(--p, 0) * 1%), transparent 0);
+  }
+  body.compact.truedamage.no-progress #art-wrap::before { content: none; }
   body.compact.truedamage #eq { flex: none; min-height: 0; width: 70px; height: 30px; }
 
   /* theme=iracing: sim-racing HUD. Dark slate panel with a blue top edge, a
@@ -969,7 +978,7 @@ function drawSuperstar(w, h, bw, gap, pct) {
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
     const x = i * (bw + gap), bh = Math.max(3, level[i] * room), y = line - 3 - bh;
     if (x + bw <= head) {
-      const hue = 290 - 95 * Math.min(1, (x / Math.max(1, head)) ** 2); // magenta -> cyan near the playhead
+      const hue = 290 - 95 * Math.min(1, (x / w) ** 2); // magenta -> cyan towards the end of the song
       const gr = g.createLinearGradient(0, y + bh, 0, y);
       gr.addColorStop(0, `hsl(${hue + 20} 90% 45%)`);
       gr.addColorStop(1, `hsl(${hue} 100% 68%)`);
@@ -983,7 +992,7 @@ function drawSuperstar(w, h, bw, gap, pct) {
   if (opt.compact) return;
   // progress line
   g.fillStyle = 'rgba(60,70,160,.35)'; g.fillRect(0, line, w, 2);
-  const lg = g.createLinearGradient(0, 0, Math.max(1, head), 0);
+  const lg = g.createLinearGradient(0, 0, w, 0);
   lg.addColorStop(0, '#ff3b3b'); lg.addColorStop(.6, '#ff7a2a'); lg.addColorStop(1, '#ffc94a');
   g.fillStyle = lg; g.shadowColor = '#ff7a2a'; g.shadowBlur = 6; g.fillRect(0, line - .5, head, 3); g.shadowBlur = 0;
   // marker
