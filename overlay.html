@@ -588,14 +588,14 @@
   body.macos #bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); }
   body.macos #fill { border-radius: 2px; background: rgba(255,255,255,.85); }
   /* compact: a small window, slim title bar with smaller buttons above the line */
-  body.compact.macos #card { height: 64px; padding: 18px 20px 6px 10px; border-radius: 12px; }
+  body.compact.macos #card { height: 64px; padding: 20px 20px 4px 10px; border-radius: 12px; } /* 16px title bar + 4px: content centered in the dark area */
   body.compact.macos #card::before {
     height: 16px; border-radius: 0;
     background: radial-gradient(circle 4px at 13px 8px, #ff5f57 3.5px, transparent 4px),
                 radial-gradient(circle 4px at 26px 8px, #febc2e 3.5px, transparent 4px),
                 radial-gradient(circle 4px at 39px 8px, #28c840 3.5px, transparent 4px), linear-gradient(#3a3a3c, #323234);
   }
-  body.compact.macos #art-wrap { width: 40px; height: 40px; border-radius: 50%; top: 2px; } /* cover in the middle of the dark area below the title bar */
+  body.compact.macos #art-wrap { width: 40px; height: 40px; border-radius: 50%; }
   body.compact.macos:not(.no-progress) #art-wrap { background: conic-gradient(#fff calc(var(--p, 0) * 1%), rgba(255,255,255,.18) 0); }
   /* card=0: no title bar, so the label goes back above the title */
   body.no-card.macos:not(.compact) #card { padding-top: 16px; }
