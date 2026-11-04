@@ -44,6 +44,8 @@ You need a server with **[Docker](https://docs.docker.com/engine/install/)** (or
    ADMIN_PASSWORD=a-long-password
    ```
 
+   Leave `ADMIN_PASSWORD` empty to skip the sign-in (only if nobody else can reach the server, e.g. behind an access list). With `npm start` add `ONLINE=1` to `.env` for that.
+
    Then start it with `docker compose up -d` (or `npm start`). It listens on port `8974`.
 
 2. **Put it behind your domain.** In Nginx Proxy Manager, add a **Proxy Host**:
@@ -52,7 +54,7 @@ You need a server with **[Docker](https://docs.docker.com/engine/install/)** (or
    - Turn on **Websockets Support**. The extension needs it.
    - On the **SSL** tab, request a Let's Encrypt certificate and turn on **Force SSL**.
 
-3. **Sign in.** Open `https://ytw.example.com/editor` and sign in with the user and password from `.env`.
+3. **Sign in.** Open `https://ytw.example.com/editor` and sign in with the user and password from `.env` (without a password the editor opens right away).
 
 4. **Load the extension** on the PC where you listen to music.
    - **Chrome, Edge, Brave, Opera:** download YoutubeWatchr there too (**Code → Download ZIP** on this page), open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the `extension` folder.
