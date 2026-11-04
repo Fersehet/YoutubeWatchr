@@ -169,7 +169,8 @@ async function handle(req, res) {
   }
 
   // ---- online: public routes ----------------------------------------------------------
-  const user = auth.user(req);
+  // No ADMIN_PASSWORD: no login, everyone is the admin
+  const user = auth.enabled ? auth.user(req) : config.adminUser;
   let m;
   if (get && (m = p.match(/^\/overlay\/([\w-]+)(\/events)?$/))) {
     const id = store.byOverlayKey(m[1]);
@@ -275,7 +276,7 @@ server.on('upgrade', onUpgrade);
 server.listen(config.port, config.host, () => {
   if (online) {
     console.log(`YoutubeWatchr is running online: http://localhost:${config.port}/editor`);
-    console.log(`Sign in as "${config.adminUser}" with the password from .env.`);
+    console.log(auth.enabled ? `Sign in as "${config.adminUser}" with the password from .env.` : 'No ADMIN_PASSWORD in .env: the editor opens without a login.');
   } else {
     console.log(`YoutubeWatchr is running locally: add http://127.0.0.1:${config.port}/ as an OBS Browser Source`);
     console.log(`Customize it in the editor: http://127.0.0.1:${config.port}/editor`);

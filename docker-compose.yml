@@ -1,4 +1,5 @@
 # YoutubeWatchr online server. Start: put ADMIN_PASSWORD into .env, then `docker compose up -d`.
+# With ADMIN_PASSWORD left empty, the editor opens without a login.
 # It is reachable at http://<server>:8974 afterwards (for Nginx Proxy Manager: forward port 8974,
 # turn on "Websockets Support"). Keys and settings are kept in data/.
 services:
@@ -9,6 +10,8 @@ services:
     working_dir: /app
     command: node server.js
     env_file: .env
+    environment:
+      ONLINE: "1"
     ports:
       - "8974:8974"
     volumes:
