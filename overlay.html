@@ -601,6 +601,34 @@
   body.no-card.macos:not(.compact) #card { padding-top: 16px; }
   body.no-card.macos #label { position: static; height: auto; justify-content: flex-start; }
 
+  /* theme=wow: World of Warcraft. Dark slate card with a thin light border, a
+     glow of the accent top right, a short accent line on top, Geist */
+  body.wow { font-family: 'Geist', 'Segoe UI', system-ui, sans-serif; --frost: 0; --cap: rgba(255,255,255,0); --bar-glow: 0; --bar-round: 2;
+    --bar1: var(--accent); --bar2: var(--accent); font-variant-numeric: tabular-nums; }
+  body.wow #glow, body.wow #label::before { display: none; }
+  body.wow #card { border-radius: 18px; padding: 20px 24px 20px 20px; gap: 20px; background: rgba(20,22,28,.94);
+    box-shadow: 0 10px 34px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.12); }
+  body.wow #card::before { content: ''; position: absolute; inset: 0; background: var(--accent); opacity: .14; pointer-events: none;
+    -webkit-mask-image: radial-gradient(380px 220px at 100% 0%, #000, transparent 70%); mask-image: radial-gradient(380px 220px at 100% 0%, #000, transparent 70%); }
+  body.wow #card::after { content: ''; position: absolute; top: 0; left: 24px; width: 64px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
+  body.wow #art-wrap { width: 122px; height: 122px; border-radius: 50%; box-shadow: 0 0 0 3px var(--accent); background: #3a3e48; margin: 3px; }
+  body.wow #label { font-size: 12px; font-weight: 400; letter-spacing: .04em; text-transform: none; color: #b1b7c3; }
+  body.wow #title { font-size: 26px; font-weight: 700; line-height: 1.15; color: #f2f2f2; }
+  body.wow #artist { font-size: 15px; font-weight: 400; color: #d3d7df; }
+  body.wow #progress { font-size: 14px; color: #d3d7df; gap: 12px; }
+  body.wow #bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.14); }
+  body.wow #bar #fill { border-radius: 4px; background: var(--accent); }
+  /* compact: a slim bar. Thick accent ring with a dim rest, dividers, title in the accent */
+  body.compact.wow { --cfs: 18px; }
+  body.compact.wow #card { border-radius: 999px; padding: 8px 26px 8px 8px; gap: 14px; background: rgba(18,20,26,.74); box-shadow: 0 8px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.2); }
+  body.compact.wow #card::before, body.compact.wow #card::after { display: none; }
+  body.compact.wow #art-wrap { width: 44px; height: 44px; margin: 0; box-shadow: none; background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--accent) 32%, #3a3e48) 0); }
+  body.compact.wow #art-wrap img { inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); }
+  body.compact.wow #info { gap: 14px; }
+  body.compact.wow #eq { padding-right: 14px; box-sizing: content-box; border-right: 1px solid rgba(255,255,255,.2); }
+  body.compact.wow #title { font-weight: 700; color: var(--accent); }
+  body.compact.wow #artist { padding-left: 14px; border-left-color: rgba(255,255,255,.2); color: #d3d7df; }
+
   /* compact versions keep the hard edges */
   body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
   body.compact.cs #label { display: none; }
@@ -676,7 +704,7 @@
 const SAVED = typeof window.YTW_SAVED === 'string' && !location.search;
 const q = new URLSearchParams(SAVED ? window.YTW_SAVED : location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon | macos ("minimal" = classic + compact)
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon | macos | wow ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
@@ -707,16 +735,16 @@ const opt = {
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
-document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon', 'macos'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon', 'macos', 'wow'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
-const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900', pinkribbon: 'Lato:wght@400;700&family=Playfair+Display:wght@700' };
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900', pinkribbon: 'Lato:wght@400;700&family=Playfair+Display:wght@700', wow: 'Geist:wght@400;600;700' };
 if (FONTS[opt.theme]) {
   const f = document.createElement('link');
   f.rel = 'stylesheet'; f.href = opt.fonts || `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
   document.head.appendChild(f);
 }
 // Game themes use their own palette instead of colors picked from the cover.
-const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'], pinkribbon: ['#e0457b', '#f7a1c0'] }[opt.theme];
+const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'], pinkribbon: ['#e0457b', '#f7a1c0'], wow: ['#ffd100', '#ffd100'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
