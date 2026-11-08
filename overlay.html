@@ -298,10 +298,11 @@
   body.compact.retro #eq { height: 28px; }
 
   /* ---- game-inspired themes: brand palettes, no logos ---------------------
-     Each sets its own colors (see BRAND in the script); ?accent= overrides. */
+     Each sets its own colors (see BRAND in the script); ?accent= overrides.
+     Branded themes keep --frost: 0, so the card never takes on the cover. */
 
   /* theme=lol: hextech gold frame on deep navy, teal magic glow */
-  body.lol { --bar-round: 0; --cap: #f0e6d2; --frost: .18; --bar1: #785a28; --bar2: var(--accent); }
+  body.lol { --bar-round: 0; --cap: #f0e6d2; --frost: 0; --bar1: #785a28; --bar2: var(--accent); }
   body.lol #card {
     border-radius: 0;
     background: linear-gradient(180deg, rgba(1,10,19,.95), rgba(9,20,40,.94));
@@ -433,7 +434,7 @@
      license-style chip as the label, and the equalizer as the shift lights of
      a wheel (green, yellow, red, blue LEDs). The progress bar is split into
      three sectors. */
-  body.iracing { font-family: "Roboto", "Segoe UI", system-ui, sans-serif; --frost: .12; }
+  body.iracing { font-family: "Roboto", "Segoe UI", system-ui, sans-serif; --frost: 0; }
   body.iracing #card {
     border-radius: 4px; padding: 14px 18px 14px 14px;
     background: linear-gradient(180deg, rgba(22,28,38,.95), rgba(10,13,19,.95));
@@ -480,7 +481,7 @@
      bold uppercase title and a checkered flag fading in on the right. */
   body.f1 {
     font-family: "Titillium Web", "Segoe UI", system-ui, sans-serif;
-    --frost: .1; --bar-round: 0; --bar1: var(--accent); --bar2: #fff; --cap: rgba(255,255,255,.9);
+    --frost: 0; --bar-round: 0; --bar1: var(--accent); --bar2: #fff; --cap: rgba(255,255,255,.9);
   }
   body.f1 #card {
     border-radius: 0 22px 0 0; padding: 14px 20px 14px 22px;
