@@ -123,7 +123,7 @@ Every theme also has a **compact** version, a slim one-line bar where the progre
   <img src="docs/compact.png" alt="Compact versions of the Liquid glass and Vinyl themes">
 </p>
 
-Most themes take their colors from the album cover. The game, racing and `pinkribbon` themes use their own colors. `pinkribbon` is a light pink card with the pink ribbon of breast cancer awareness. In `iracing` the equalizer looks like the shift lights of a sim-racing wheel: green, yellow, red and blue LEDs. `macos` is a dark macOS window with the three window buttons in the title bar.
+Most themes take their colors from the album cover. The game, racing and `pinkribbon` themes use their own colors, so their card looks the same with every cover. `pinkribbon` is a light pink card with the pink ribbon of breast cancer awareness. In `iracing` the equalizer looks like the shift lights of a sim-racing wheel: green, yellow, red and blue LEDs. `macos` is a dark macOS window with the three window buttons in the title bar.
 
 ## All options
 
