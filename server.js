@@ -74,7 +74,7 @@ function clientInfo(req) {
   const peer = req.socket.remoteAddress || '';
   const proxied = isPrivate(peer);
   const fwd = proxied && req.headers['x-forwarded-for'];
-  req.ip = fwd ? fwd.split(',')[0].trim() : peer;
+  req.ip = fwd ? fwd.split(',').pop().trim() : peer; // the last entry is the one our proxy added; earlier ones come from the visitor
   req.secure = !!req.socket.encrypted || (proxied && req.headers['x-forwarded-proto'] === 'https');
 }
 
@@ -201,7 +201,7 @@ async function handle(req, res) {
   // ---- online: only after login ---------------------------------------------------------
   if (!user) {
     if (p.startsWith('/api/')) return json(res, 401, { error: 'Please sign in' });
-    if (get && (p === '/' || p === '/editor')) return redirect(res, '/login.html?next=' + encodeURIComponent('/editor'));
+    if (get && (p === '/' || p === '/editor')) return redirect(res, '/login.html?next=' + encodeURIComponent('/editor' + (p === '/editor' ? url.search : '')));
     return notFound(res);
   }
   // Changes only from our own pages, not from other sites in the same browser
@@ -240,7 +240,7 @@ async function handle(req, res) {
 }
 
 // ---- the extension streams the music over a WebSocket ---------------------------------
-// First message: {"key": "..."} (online) or anything (local). Then {track} / {bands} messages.
+// First message: {"key": "..."} (online) or any JSON object (local). Then {track} / {bands} messages.
 const senders = new Set();
 function onUpgrade(req, socket) {
   clientInfo(req);
@@ -253,6 +253,7 @@ function onUpgrade(req, socket) {
   sock.onmessage = text => {
     let msg;
     try { msg = JSON.parse(text); } catch { return; }
+    if (!msg || typeof msg !== 'object') return;
     if (!entry.id) {
       entry.id = online ? store.bySendKey(String(msg.key || '')) : LOCAL;
       clearTimeout(hello);
