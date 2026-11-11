@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YT Music → OBS Now Playing
 // @namespace    yt-music-obs
-// @version      1.1.1
+// @version      1.1.2
 // @description  Sends the current YouTube Music track and a live audio spectrum to your YoutubeWatchr server.
 // @match        https://music.youtube.com/*
 // @grant        GM_xmlhttpRequest
@@ -139,9 +139,9 @@
       }
       ctx.createMediaElementSource(v).connect(analyser);
       hookedEl = v;
-      console.log('[yt-music-obs] audio spectrum hooked');
+      console.log('[YoutubeWatchr] audio spectrum hooked');
     } catch (e) {
-      console.warn('[yt-music-obs] could not hook audio, overlay will use simulated bars', e);
+      console.warn('[YoutubeWatchr] could not hook audio, overlay will use simulated bars', e);
       hookedEl = v; // don't retry the same element
     }
   }

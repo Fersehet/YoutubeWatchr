@@ -172,6 +172,8 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 
 ## Troubleshooting
 
+The extension and the sign-in page come in English, German, Russian and French: the extension follows your browser's language, the sign-in page the language of the editor. The messages below are the English ones.
+
 - **The extension says "Server not reachable":** check the address in the extension (with `https://`), that the server is running (`docker compose ps`) and that **Websockets Support** is on in Nginx Proxy Manager.
 - **The extension says "Wrong key":** copy the key again from the editor under **Connection**. After **New key** the old one no longer works.
 - **The extension says "Enter the server address":** choose **OBS WebSocket** in the extension if you don't use a server.

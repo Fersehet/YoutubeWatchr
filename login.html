@@ -42,41 +42,84 @@
 <body>
   <form class="login" id="form" novalidate>
     <img class="logo" src="/logo.svg" alt="YoutubeWatchr" width="176" height="36">
-    <div class="eyebrow">Overlay editor</div>
-    <h1>Sign in</h1>
-    <p class="sub">After signing in you go straight to the editor for your OBS overlay.</p>
-    <label><span>User name</span><input id="user" autocomplete="username" autofocus></label>
-    <label><span>Password</span><input id="password" type="password" autocomplete="current-password"></label>
-    <button type="submit" id="submit">Sign in</button>
+    <div class="eyebrow" data-i18n="eyebrow">Overlay editor</div>
+    <h1 data-i18n="signIn">Sign in</h1>
+    <p class="sub" data-i18n="sub">After signing in you go straight to the editor for your OBS overlay.</p>
+    <label><span data-i18n="user">User name</span><input id="user" autocomplete="username" autofocus></label>
+    <label><span data-i18n="password">Password</span><input id="password" type="password" autocomplete="current-password"></label>
+    <button type="submit" id="submit" data-i18n="signIn">Sign in</button>
     <p class="msg" id="msg" role="alert"></p>
   </form>
 <script>
 const $ = id => document.getElementById(id);
 const show = (text, info) => { $('msg').textContent = text || ''; $('msg').className = info ? 'msg info' : 'msg'; };
-const DISABLED = 'Sign-in is not set up on this server yet: put ADMIN_PASSWORD into the .env file and restart it.';
 
 // Only allow paths on this server as the target
-let next = new URLSearchParams(location.search).get('next') || '';
+const query = new URLSearchParams(location.search);
+let next = query.get('next') || '';
 if (!/^\/(?![\/\\])/.test(next)) next = '/editor';
+
+// ---- languages: like the editor, from the link (?lang=de), then the last choice, otherwise English
+const T = {
+  en: {
+    title: 'Sign in · YoutubeWatchr', eyebrow: 'Overlay editor', signIn: 'Sign in',
+    sub: 'After signing in you go straight to the editor for your OBS overlay.',
+    user: 'User name', password: 'Password',
+    disabled: 'Sign-in is not set up on this server yet: put ADMIN_PASSWORD into the .env file and restart it.',
+    empty: 'Please enter your user name and password.', wrong: 'Wrong user name or password.',
+    locked: 'Too many attempts. Please try again in 15 minutes.', failed: 'Sign-in failed.', offline: 'The server is not reachable.',
+  },
+  de: {
+    title: 'Anmelden · YoutubeWatchr', eyebrow: 'Overlay-Editor', signIn: 'Anmelden',
+    sub: 'Nach der Anmeldung kommst du direkt in den Editor für dein OBS-Overlay.',
+    user: 'Benutzername', password: 'Passwort',
+    disabled: 'Die Anmeldung ist auf diesem Server noch nicht eingerichtet: Trage ADMIN_PASSWORD in die .env-Datei ein und starte ihn neu.',
+    empty: 'Bitte gib Benutzername und Passwort ein.', wrong: 'Benutzername oder Passwort ist falsch.',
+    locked: 'Zu viele Versuche. Bitte versuche es in 15 Minuten noch einmal.', failed: 'Anmeldung fehlgeschlagen.', offline: 'Der Server ist nicht erreichbar.',
+  },
+  ru: {
+    title: 'Вход · YoutubeWatchr', eyebrow: 'Редактор оверлея', signIn: 'Войти',
+    sub: 'После входа ты сразу попадёшь в редактор своего оверлея для OBS.',
+    user: 'Имя пользователя', password: 'Пароль',
+    disabled: 'Вход на этом сервере ещё не настроен: впиши ADMIN_PASSWORD в файл .env и перезапусти сервер.',
+    empty: 'Введи имя пользователя и пароль.', wrong: 'Неверное имя пользователя или пароль.',
+    locked: 'Слишком много попыток. Попробуй снова через 15 минут.', failed: 'Не удалось войти.', offline: 'Сервер недоступен.',
+  },
+  fr: {
+    title: 'Connexion · YoutubeWatchr', eyebrow: 'Éditeur d\'overlay', signIn: 'Se connecter',
+    sub: 'Après la connexion, tu arrives directement dans l\'éditeur de ton overlay OBS.',
+    user: 'Nom d\'utilisateur', password: 'Mot de passe',
+    disabled: 'La connexion n\'est pas encore configurée sur ce serveur : ajoute ADMIN_PASSWORD dans le fichier .env et redémarre-le.',
+    empty: 'Saisis ton nom d\'utilisateur et ton mot de passe.', wrong: 'Nom d\'utilisateur ou mot de passe incorrect.',
+    locked: 'Trop de tentatives. Réessaie dans 15 minutes.', failed: 'Échec de la connexion.', offline: 'Le serveur est injoignable.',
+  },
+};
+let lang = query.get('lang') || new URLSearchParams(next.split('?')[1] || '').get('lang') || '';
+try { if (!Object.hasOwn(T, lang)) lang = localStorage.getItem('yw-lang') || ''; } catch {}
+if (!Object.hasOwn(T, lang)) lang = 'en';
+const t = key => T[lang][key];
+document.documentElement.lang = lang;
+document.title = t('title');
+document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
 
 fetch('/api/me', { cache: 'no-store' }).then(r => r.json()).then(me => {
   if (!me.online || me.user) location.replace(next);
-  else if (!me.loginEnabled) show(DISABLED, true);
+  else if (!me.loginEnabled) show(t('disabled'), true);
 }).catch(() => {});
 
 $('form').addEventListener('submit', async e => {
   e.preventDefault();
   const user = $('user').value.trim(), password = $('password').value;
-  if (!user || !password) return show('Please enter your user name and password.');
+  if (!user || !password) return show(t('empty'));
   $('submit').disabled = true;
   show('');
   try {
     const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user, password }) });
     if (r.ok) return location.replace(next);
-    show(r.status === 503 ? DISABLED : (await r.json().catch(() => ({}))).error || 'Sign-in failed.');
+    show(t({ 503: 'disabled', 429: 'locked', 401: 'wrong' }[r.status] || 'failed'));
     $('password').value = '';
   } catch {
-    show('The server is not reachable.');
+    show(t('offline'));
   } finally {
     $('submit').disabled = false;
   }
