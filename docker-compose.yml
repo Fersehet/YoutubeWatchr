@@ -1,5 +1,5 @@
 # YoutubeWatchr online server. Start: put ADMIN_PASSWORD into .env, then `docker compose up -d`.
-# It is reachable at http://<server>:8974 afterwards (for Nginx Proxy Manager: forward port 8974,
+# It is reachable at http://<server>:8974 afterwards, or at the PORT from .env (for Nginx Proxy Manager: forward that port,
 # turn on "Websockets Support"). Keys and settings are kept in data/.
 services:
   youtubewatchr:
@@ -10,6 +10,6 @@ services:
     command: node server.js
     env_file: .env
     ports:
-      - "8974:8974"
+      - "${PORT:-8974}:${PORT:-8974}"
     volumes:
       - .:/app

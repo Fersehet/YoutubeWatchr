@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 352 72" width="352" height="72">
   <title>YoutubeWatchr</title>
   <style>
-    /* Same choreography as FaceitWatcher's animated logo: the sign builds up,
+    /* Same choreography as FaceitWatchr's animated logo: the sign builds up,
        the white shape draws in, the name rises; then the bars keep bouncing. */
     .bar { opacity: 0; transform-box: fill-box; transform-origin: center; transform: scaleY(.6); animation-timing-function: cubic-bezier(.3, 1.15, .5, 1), ease-in-out; animation-iteration-count: 1, infinite; animation-fill-mode: forwards, none; }
     .play-line { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw .45s ease-out .55s forwards; }

@@ -121,9 +121,9 @@
       }
       ctx.createMediaElementSource(v).connect(analyser);
       hookedEl = v;
-      console.log('[yt-music-obs] audio spectrum hooked');
+      console.log('[YoutubeWatchr] audio spectrum hooked');
     } catch (e) {
-      console.warn('[yt-music-obs] could not hook audio, overlay will use simulated bars', e);
+      console.warn('[YoutubeWatchr] could not hook audio, overlay will use simulated bars', e);
       hookedEl = v; // don't retry the same element
     }
   }
