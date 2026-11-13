@@ -12,7 +12,7 @@ Show the song you're playing on **YouTube Music** in your OBS stream: cover, tit
 </p>
 
 - 13 designs, from a clean card to a spinning record, plus game styles for League of Legends, Counter-Strike, FACEIT and World of Warcraft, racing styles for iRacing and Formula 1, a pink ribbon for breast cancer awareness and a macOS window
-- An editor in your browser to change colors, fonts, size and more, with a live preview
+- An editor in your browser to change colors, fonts, size and more, with a live preview and several overlay profiles
 - Host it on your own server with a login: one OBS URL that never changes, and your changes show up in OBS right away
 - Or run it only on your own computer, without an account: with just the browser extension through OBS WebSocket, or with a small local server
 
@@ -107,13 +107,19 @@ You need **[Node.js](https://nodejs.org)** (version 18 or newer).
 
 Open the editor: on your online server at `https://ytw.example.com/editor`, with the local server at **[http://127.0.0.1:8974/editor](http://127.0.0.1:8974/editor)**, or double-click `editor.html` in the download.
 
-![The editor: a preview of the overlay in a sample stream scene on the left, the connection with server address and extension key and the settings for theme, layout and colors on the right](docs/editor.png)
+![The editor: tabs for the overlay profiles and a preview of the overlay in a sample stream scene on the left, the connection and the settings for theme, layout and colors on the right](docs/editor.png)
 
 1. Pick a theme and change whatever you like. The preview updates right away. Untick **Demo songs** to see your own music.
 2. **Online:** that's it. The OBS URL stays the same and OBS shows your changes by itself.
 3. **Locally:** click **Copy URL**, paste it into your Browser source in OBS and set the width and height the editor shows under the URL.
 
 The editor remembers your settings. Online it keeps them on the server, so they are the same on every PC.
+
+### Profiles
+
+Want a different look per scene, for example a big card while gaming and a compact one while chatting? The tabs above the preview are your overlay profiles. **+ Profile** makes a copy of the current one, and **⋯** on the open tab renames, duplicates or deletes it. Each profile has its own OBS URL, so you can use several at once in different Browser sources. The connection settings are the same for all profiles, and **Reset this profile** only resets the open one.
+
+Online the URLs look like `https://ytw.example.com/overlay/AbC123…/k3v9qa`. Renaming a profile keeps its URL. If you delete a profile, OBS shows the **Default** profile in its place. Your settings from before profiles existed are the **Default** profile, and its URL is the same as before.
 
 Did your OBS URL or extension key end up on stream? Click **New OBS URL** or **New key** under **Connection**. The old one stops working right away.
 

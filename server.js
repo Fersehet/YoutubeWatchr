@@ -87,7 +87,7 @@ function hostOf(url) {
   try { return new URL(url).host; } catch { return null; }
 }
 
-function sse(req, res, id) {
+function sse(req, res, id, profile = '') {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -97,6 +97,7 @@ function sse(req, res, id) {
   });
   res.write('retry: 2000\n\n');
   const ch = channel(id);
+  res.profile = profile; // the overlay profile this page shows (online)
   if (ch.track) res.write(`event: track\ndata: ${JSON.stringify(ch.track)}\n\n`);
   ch.clients.add(res);
   req.on('close', () => ch.clients.delete(res));
@@ -129,6 +130,11 @@ const LOGIN_ERRORS = {
   locked: [429, 'Too many attempts. Please try again in 15 minutes.'],
   wrong: [401, 'Wrong user name or password.'],
 };
+
+// Online every overlay profile has its own URL: /overlay/<key> is the default profile,
+// /overlay/<key>/<profile> another one. A deleted profile shows the default one.
+const queryOf = (u, profile) => (profile && u.queries && u.queries[profile] !== undefined ? u.queries[profile] : u.query) || '';
+const profileOf = (u, profile) => (profile && u.queries && u.queries[profile] !== undefined ? profile : '');
 
 function account(name) {
   const u = store.user(name);
@@ -172,11 +178,12 @@ async function handle(req, res) {
   // No ADMIN_PASSWORD: no login, everyone is the admin
   const user = auth.enabled ? auth.user(req) : config.adminUser;
   let m;
-  if (get && (m = p.match(/^\/overlay\/([\w-]+)(\/events)?$/))) {
+  if (get && (m = p.match(/^\/overlay\/([\w-]+)(?:\/(?!events$)([\w-]+))?(\/events)?$/))) {
     const id = store.byOverlayKey(m[1]);
     if (!id) return notFound(res);
-    if (m[2]) return sse(req, res, id);
-    return sendOverlay(res, store.data[id].query || '');
+    const u = store.data[id];
+    if (m[3]) return sse(req, res, id, profileOf(u, m[2]));
+    return sendOverlay(res, queryOf(u, m[2]));
   }
   if (get && p === '/overlay.html') return sendFile(res, path.join(ROOT, 'overlay.html'));
   if (get && p === '/login.html') return sendFile(res, path.join(ROOT, 'login.html'));
@@ -213,15 +220,29 @@ async function handle(req, res) {
   if (get && p === '/editor') return sendFile(res, path.join(ROOT, 'editor.html'));
   if (get && p === '/api/account') return json(res, 200, account(user));
 
-  // The editor saves the overlay settings; open overlays reload with them right away.
+  // The editor saves the overlay settings of all profiles; open overlays reload with them right away.
+  // body.query is the default profile, body.queries the other profiles by id.
   if (p === '/api/settings' && req.method === 'PUT') {
     let body;
-    try { body = await readBody(req, 2e4); } catch { return json(res, 400, { error: 'Bad request' }); }
-    const query = String(body.query || '').replace(/^\?/, '');
-    if (query.length > 4000) return json(res, 400, { error: 'Too long' });
-    const before = store.user(user).query;
-    store.update(user, { query, editor: body.editor && typeof body.editor === 'object' ? body.editor : null });
-    if (query !== before) broadcast(user.toLowerCase(), 'settings', query);
+    try { body = await readBody(req, 2e5); } catch { return json(res, 400, { error: 'Bad request' }); }
+    const clean = q => String(q || '').replace(/^\?/, '');
+    const query = clean(body.query);
+    const queries = {};
+    const ids = body.queries && typeof body.queries === 'object' ? Object.keys(body.queries) : [];
+    if (ids.length > 50) return json(res, 400, { error: 'Too many profiles' });
+    for (const k of ids) {
+      if (!/^[\w-]{1,24}$/.test(k) || k === 'events') return json(res, 400, { error: 'Bad profile' });
+      queries[k] = clean(body.queries[k]);
+    }
+    if ([query, ...Object.values(queries)].some(q => q.length > 4000)) return json(res, 400, { error: 'Too long' });
+    const before = { ...store.user(user) };
+    const after = store.update(user, { query, queries, editor: body.editor && typeof body.editor === 'object' ? body.editor : null });
+    // only the overlays whose profile changed (or was deleted) reload
+    const msgs = {};
+    for (const c of channel(user.toLowerCase()).clients) {
+      const q = queryOf(after, c.profile);
+      if (q !== queryOf(before, c.profile)) c.write(msgs[q] ??= `event: settings\ndata: ${JSON.stringify(q)}\n\n`);
+    }
     return json(res, 200, { ok: true });
   }
 

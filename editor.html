@@ -89,6 +89,16 @@
   /* color-scheme must match the overlay page, or Chrome paints the frame opaque */
   #ov { position: absolute; left: 2%; bottom: 3%; border: 0; transform-origin: 0 100%; background: transparent; color-scheme: normal; }
 
+  .ptabs { position: relative; display: flex; gap: 4px; align-items: flex-end; overflow-x: auto; margin-bottom: -10px; scrollbar-width: thin; }
+  .ptab { display: flex; flex: none; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 8px 0 0; background: var(--panel); }
+  .ptab button { border: 0; border-radius: 8px 8px 0 0; background: none; padding: 7px 12px; font-size: 13px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ptab.on { background: var(--panel2); border-color: var(--accent); box-shadow: inset 0 2px 0 var(--accent); }
+  .ptab .more { padding: 7px 10px 7px 2px; color: var(--muted); }
+  .ptab.add { border-style: dashed; }
+  .pmenu { position: fixed; z-index: 50; display: grid; gap: 2px; min-width: 170px; padding: 6px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 30px rgba(0,0,0,.5); }
+  .pmenu button { border: 0; background: none; text-align: left; font-size: 13px; }
+  .pmenu button:hover { background: var(--panel); }
+  .pmenu button:disabled { opacity: .4; cursor: default; }
   .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .bar .spacer { flex: 1; }
   .url { display: grid; gap: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
@@ -164,6 +174,12 @@
 
   <div class="layout">
     <div class="left">
+      <div class="ptabs" id="ptabs" role="group" aria-label="Overlay profiles" data-i18n-aria="profiles"></div>
+      <div class="pmenu" id="pmenu" hidden>
+        <button type="button" data-pact="rename" data-i18n="rename">Rename</button>
+        <button type="button" data-pact="duplicate" data-i18n="duplicate">Duplicate</button>
+        <button type="button" data-pact="delete" data-i18n="delete">Delete</button>
+      </div>
       <div class="stage" id="stage">
         <canvas id="scene"></canvas>
         <iframe id="ov" title="Overlay preview" data-i18n-title="preview"></iframe>
@@ -295,7 +311,7 @@
       </fieldset>
 
       <div class="bar">
-        <button type="button" id="reset" data-i18n="reset">Reset all settings</button>
+        <button type="button" id="reset" data-i18n="reset">Reset this profile</button>
       </div>
       <p class="note" data-i18n="soon">Coming later: Spotify, Deezer and Apple Music.</p>
     </aside>
@@ -333,7 +349,8 @@ const T = {
     text: 'Text', label: 'Label', showLabelAria: 'Show label', labelTextAria: 'Label text', font: 'Font', themeDefault: 'Theme default',
     show: 'Show', album: 'Album', cover: 'Cover',
     eqProgress: 'Equalizer & progress', equalizer: 'Equalizer', showEqAria: 'Show equalizer', barsAria: 'Number of bars',
-    progress: 'Progress', whenPaused: 'When paused', hideOverlay: 'Hide overlay', reset: 'Reset all settings', soon: 'Coming later: Spotify, Deezer and Apple Music.',
+    progress: 'Progress', whenPaused: 'When paused', hideOverlay: 'Hide overlay', reset: 'Reset this profile', soon: 'Coming later: Spotify, Deezer and Apple Music.',
+    profiles: 'Overlay profiles', addProfile: '+ Profile', profileDefault: 'Default', profileWord: 'Profile', profileMenu: 'Profile options', rename: 'Rename', duplicate: 'Duplicate', delete: 'Delete', profileName: 'Profile name:', confirmDelete: 'Delete the profile "{name}"?', deleteOnline: 'OBS sources with its URL then show the default profile.',
     confirmNewKey: 'Make a new extension key? The extension stops sending until you enter the new one.',
     confirmNewUrl: 'Make a new OBS URL? The old URL stops working, so you need to paste the new one into OBS.',
   },
@@ -365,7 +382,8 @@ const T = {
     text: 'Text', label: 'Beschriftung', showLabelAria: 'Beschriftung zeigen', labelTextAria: 'Text der Beschriftung', font: 'Schrift', themeDefault: 'Wie im Design',
     show: 'Zeigen', album: 'Album', cover: 'Cover',
     eqProgress: 'Equalizer & Fortschritt', equalizer: 'Equalizer', showEqAria: 'Equalizer zeigen', barsAria: 'Anzahl der Balken',
-    progress: 'Fortschritt', whenPaused: 'Bei Pause', hideOverlay: 'Overlay ausblenden', reset: 'Alle Einstellungen zurücksetzen', soon: 'Kommt später: Spotify, Deezer und Apple Music.',
+    progress: 'Fortschritt', whenPaused: 'Bei Pause', hideOverlay: 'Overlay ausblenden', reset: 'Dieses Profil zurücksetzen', soon: 'Kommt später: Spotify, Deezer und Apple Music.',
+    profiles: 'Overlay-Profile', addProfile: '+ Profil', profileDefault: 'Standard', profileWord: 'Profil', profileMenu: 'Profil-Optionen', rename: 'Umbenennen', duplicate: 'Duplizieren', delete: 'Löschen', profileName: 'Name des Profils:', confirmDelete: 'Das Profil „{name}“ löschen?', deleteOnline: 'OBS-Quellen mit seiner URL zeigen dann das Standard-Profil.',
     confirmNewKey: 'Neuen Erweiterungs-Schlüssel erstellen? Die Erweiterung sendet nicht mehr, bis du den neuen einträgst.',
     confirmNewUrl: 'Neue OBS-URL erstellen? Die alte URL funktioniert dann nicht mehr, du musst die neue in OBS einfügen.',
   },
@@ -397,7 +415,8 @@ const T = {
     text: 'Текст', label: 'Подпись', showLabelAria: 'Показывать подпись', labelTextAria: 'Текст подписи', font: 'Шрифт', themeDefault: 'Как в дизайне',
     show: 'Показывать', album: 'Альбом', cover: 'Обложка',
     eqProgress: 'Эквалайзер и прогресс', equalizer: 'Эквалайзер', showEqAria: 'Показывать эквалайзер', barsAria: 'Число полос',
-    progress: 'Прогресс', whenPaused: 'На паузе', hideOverlay: 'Скрывать оверлей', reset: 'Сбросить все настройки', soon: 'Скоро: Spotify, Deezer и Apple Music.',
+    progress: 'Прогресс', whenPaused: 'На паузе', hideOverlay: 'Скрывать оверлей', reset: 'Сбросить этот профиль', soon: 'Скоро: Spotify, Deezer и Apple Music.',
+    profiles: 'Профили оверлея', addProfile: '+ Профиль', profileDefault: 'Основной', profileWord: 'Профиль', profileMenu: 'Настройки профиля', rename: 'Переименовать', duplicate: 'Дублировать', delete: 'Удалить', profileName: 'Название профиля:', confirmDelete: 'Удалить профиль «{name}»?', deleteOnline: 'Источники OBS с его URL покажут основной профиль.',
     confirmNewKey: 'Создать новый ключ расширения? Расширение перестанет отправлять музыку, пока ты не введёшь новый.',
     confirmNewUrl: 'Создать новый URL для OBS? Старый URL перестанет работать, новый нужно вставить в OBS.',
   },
@@ -429,7 +448,8 @@ const T = {
     text: 'Texte', label: 'Étiquette', showLabelAria: 'Afficher l\'étiquette', labelTextAria: 'Texte de l\'étiquette', font: 'Police', themeDefault: 'Celle du design',
     show: 'Afficher', album: 'Album', cover: 'Pochette',
     eqProgress: 'Égaliseur et progression', equalizer: 'Égaliseur', showEqAria: 'Afficher l\'égaliseur', barsAria: 'Nombre de barres',
-    progress: 'Progression', whenPaused: 'En pause', hideOverlay: 'Masquer l\'overlay', reset: 'Réinitialiser tous les réglages', soon: 'Plus tard : Spotify, Deezer et Apple Music.',
+    progress: 'Progression', whenPaused: 'En pause', hideOverlay: 'Masquer l\'overlay', reset: 'Réinitialiser ce profil', soon: 'Plus tard : Spotify, Deezer et Apple Music.',
+    profiles: 'Profils d\'overlay', addProfile: '+ Profil', profileDefault: 'Par défaut', profileWord: 'Profil', profileMenu: 'Options du profil', rename: 'Renommer', duplicate: 'Dupliquer', delete: 'Supprimer', profileName: 'Nom du profil :', confirmDelete: 'Supprimer le profil « {name} » ?', deleteOnline: 'Les sources OBS avec son URL affichent alors le profil par défaut.',
     confirmNewKey: 'Créer une nouvelle clé d\'extension ? L\'extension n\'envoie plus rien tant que tu n\'as pas saisi la nouvelle.',
     confirmNewUrl: 'Créer une nouvelle URL OBS ? L\'ancienne ne fonctionne plus, il faut coller la nouvelle dans OBS.',
   },
@@ -482,23 +502,45 @@ let ACCOUNT = null;
 
 // Where OBS loads the overlay from: your page on the online server, the local server, or overlay.html next to this file.
 function base() {
-  if (ACCOUNT) return location.origin + '/overlay/' + ACCOUNT.overlayKey;
+  if (ACCOUNT) return location.origin + '/overlay/' + ACCOUNT.overlayKey + (current === 'default' ? '' : '/' + current);
   if (state.conn === 'server') return SERVED ? location.origin + '/' : 'http://127.0.0.1:8974/';
   if (EMBEDDED) return 'file:///…/YoutubeWatchr/overlay.html';
   return new URL('overlay.html', location.href).href;
 }
 
+// Overlay profiles: each has its own look and its own OBS URL. The connection and the
+// preview options are the same for all profiles.
+const SHARED = ['conn', 'obsPort', 'obsPw', 'demo', 'checker'];
+const OWN = Object.keys(DEFAULTS).filter(k => !SHARED.includes(k));
+const pick = (o, keys) => Object.fromEntries(keys.filter(k => o && k in o).map(k => [k, o[k]]));
+let profiles = [], current = 'default';
+const prof = () => profiles.find(p => p.id === current);
+// Saved as { current, profiles: [{ id, name, s }], ...shared }. Older versions saved one
+// flat settings object: it becomes the default profile.
+function load(o) {
+  o = o && typeof o === 'object' ? o : {};
+  const list = Array.isArray(o.profiles) ? o.profiles.filter(p => p && /^[\w-]{1,24}$/.test(p.id) && p.id !== 'events') : [{ id: 'default', s: o }];
+  if (!list.some(p => p.id === 'default')) list.unshift({ id: 'default' });
+  profiles = list.map(p => ({ id: p.id, name: String(p.name || '').slice(0, 40), s: pick(p.s, OWN) }));
+  current = profiles.some(p => p.id === o.current) ? o.current : 'default';
+  return { ...DEFAULTS, ...pick(o, SHARED), ...prof().s };
+}
+function saved() {
+  prof().s = pick(state, OWN);
+  return { ...pick(state, SHARED), current, profiles };
+}
+
 let state = { ...DEFAULTS };
-try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch {}
+try { state = load(JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { state = load({}); }
 if (EMBEDDED) state.demo = true;
 
 const $ = id => document.getElementById(id);
 const ov = $('ov'), stage = $('stage');
 
 // ---- build the overlay URL -----------------------------------------------------
-function params(forObs) {
+function params(forObs, s = state) {
   const p = new URLSearchParams();
-  const s = state, h = v => v.replace('#', '');
+  const h = v => v.replace('#', '');
   if (s.theme !== 'classic') p.set('theme', s.theme);
   if (s.compact) { p.set('compact', '1'); if (s.width !== 460) p.set('width', s.width); }
   if (s.still) p.set('still', '1');
@@ -537,7 +579,8 @@ function obsSize() {
 
 let reloadTimer = 0, saveTimer = 0, obsUrl = '', paused = false;
 function render() {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {}
+  const data = saved();
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch {}
   // Online the OBS URL has no options: they are saved on the server, so OBS picks up every change
   obsUrl = ACCOUNT ? base() : base() + params(true);
   if (ACCOUNT) save();
@@ -561,7 +604,9 @@ function save() {
   clearTimeout(saveTimer);
   $('saved').textContent = '';
   saveTimer = setTimeout(async () => {
-    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: params(true), editor: state }) }).catch(() => null);
+    const data = saved(), q = p => params(true, { ...DEFAULTS, ...pick(state, SHARED), ...p.s });
+    const queries = Object.fromEntries(profiles.filter(p => p.id !== 'default').map(p => [p.id, q(p)]));
+    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q(profiles[0]), queries, editor: data }) }).catch(() => null);
     if (r && r.status === 401) return location.replace('/login.html?next=' + encodeURIComponent('/editor?lang=' + lang));
     $('saved').textContent = t(r && r.ok ? 'saved' : 'saveFailed');
   }, 500);
@@ -647,7 +692,90 @@ $('toggle').onclick = e => {
   paused = !paused;
   e.target.textContent = t(paused ? 'play' : 'pause');
 };
-$('reset').onclick = () => { state = { ...DEFAULTS }; render(); };
+$('reset').onclick = () => { state = { ...state, ...pick(DEFAULTS, OWN) }; render(); };
+
+// ---- profile tabs --------------------------------------------------------------------
+const pname = p => p.name || (p.id === 'default' ? t('profileDefault') : t('profileWord'));
+function renderTabs() {
+  const el = $('ptabs');
+  el.replaceChildren();
+  for (const p of profiles) {
+    const tab = document.createElement('div');
+    tab.className = 'ptab' + (p.id === current ? ' on' : '');
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = pname(p); b.title = pname(p);
+    b.setAttribute('aria-pressed', p.id === current);
+    b.onclick = () => switchTo(p.id);
+    tab.append(b);
+    if (p.id === current) {
+      const more = document.createElement('button');
+      more.type = 'button'; more.className = 'more'; more.textContent = '⋯';
+      more.setAttribute('aria-label', t('profileMenu')); more.setAttribute('aria-haspopup', 'menu');
+      more.onclick = e => { e.stopPropagation(); openMenu(more); };
+      tab.append(more);
+    }
+    el.append(tab);
+  }
+  const add = document.createElement('div');
+  add.className = 'ptab add';
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = t('addProfile'); b.onclick = duplicate;
+  b.disabled = profiles.length >= 50;
+  add.append(b);
+  el.append(add);
+  const on = el.querySelector('.on'); // keep the current tab in view
+  if (on.offsetLeft < el.scrollLeft || on.offsetLeft + on.offsetWidth > el.scrollLeft + el.clientWidth) el.scrollLeft = on.offsetLeft - 8;
+}
+function switchTo(id) {
+  saved(); // keep the settings of the profile we leave
+  current = id;
+  state = { ...state, ...pick(DEFAULTS, OWN), ...prof().s };
+  renderTabs();
+  render();
+}
+function askName(name) {
+  const n = prompt(t('profileName'), name);
+  return n === null ? null : n.trim().slice(0, 40);
+}
+// A new profile starts as a copy of the current one
+function duplicate() {
+  if (profiles.length >= 50) return;
+  const name = askName(t('profileWord') + ' ' + (profiles.length + 1));
+  if (name === null) return;
+  saved();
+  let id;
+  do id = Math.random().toString(36).slice(2, 8); while (profiles.some(p => p.id === id));
+  profiles.push({ id, name, s: { ...prof().s } });
+  switchTo(id);
+}
+const menu = $('pmenu');
+function openMenu(btn) {
+  const r = btn.getBoundingClientRect();
+  menu.hidden = false;
+  menu.style.left = Math.min(r.left, innerWidth - menu.offsetWidth - 8) + 'px';
+  menu.style.top = r.bottom + 4 + 'px';
+  menu.querySelector('[data-pact="delete"]').disabled = current === 'default';
+  menu.querySelector('[data-pact="duplicate"]').disabled = profiles.length >= 50;
+}
+document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.hidden = true; });
+addEventListener('keydown', e => { if (e.key === 'Escape') menu.hidden = true; });
+addEventListener('scroll', () => { menu.hidden = true; }, true);
+menu.querySelectorAll('[data-pact]').forEach(b => b.onclick = () => {
+  menu.hidden = true;
+  const p = prof();
+  if (b.dataset.pact === 'rename') {
+    const name = askName(pname(p));
+    if (name === null) return;
+    p.name = name;
+    renderTabs(); render();
+  } else if (b.dataset.pact === 'duplicate') duplicate();
+  else if (current !== 'default' && confirm(t('confirmDelete').replace('{name}', pname(p)) + (ACCOUNT ? ' ' + t('deleteOnline') : ''))) {
+    profiles = profiles.filter(x => x !== p);
+    current = 'default';
+    state = { ...state, ...pick(DEFAULTS, OWN), ...prof().s };
+    renderTabs(); render();
+  }
+});
 $('copy').onclick = e => {
   const text = obsUrl;
   const done = () => { e.target.textContent = t('copied'); setTimeout(() => e.target.textContent = t('copyUrl'), 1500); };
@@ -694,6 +822,7 @@ $('lang').onchange = e => {
   langToUrl();
   applyLang();
   if (ACCOUNT) showAccount();
+  renderTabs();
   syncControls();
   $('toggle').textContent = t(paused ? 'play' : 'pause');
 };
@@ -753,11 +882,12 @@ addEventListener('resize', () => { fit(); if (reduce) scene(0); });
       $('website').hidden = !me.website; // back to the start page, if the server shows one
       $('logout').hidden = !me.loginEnabled; // no ADMIN_PASSWORD: nothing to sign out of
       // the editor remembers your settings on the server, so they follow you to any browser
-      if (ACCOUNT.editor) state = { ...DEFAULTS, ...ACCOUNT.editor, demo: state.demo, checker: state.checker };
+      if (ACCOUNT.editor) state = { ...load(ACCOUNT.editor), demo: state.demo, checker: state.checker };
       showAccount();
       setInterval(async () => { const a = await loadAccount(); if (a) { ACCOUNT = a; showAccount(); } }, 5000);
     }
   }
+  renderTabs();
   render();
 })();
 requestAnimationFrame(scene);
