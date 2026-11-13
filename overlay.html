@@ -1081,8 +1081,8 @@ else if (opt.embed) {
 }
 else if (opt.obs) connectObs();
 else {
-  // Online: /overlay/<key>/events, locally: /events
-  const live = location.pathname.match(/^\/overlay\/[\w-]+/);
+  // Online: /overlay/<key>[/<profile>]/events, locally: /events
+  const live = location.pathname.match(/^\/overlay\/[\w-]+(\/[\w-]+)?/);
   const es = new EventSource(live && !opt.server ? live[0] + '/events' : (opt.server || '') + '/events');
   es.addEventListener('track', e => onTrack(JSON.parse(e.data)));
   es.addEventListener('bands', e => onBands(JSON.parse(e.data)));
