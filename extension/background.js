@@ -66,68 +66,10 @@ function send(payload) {
 chrome.runtime.onConnect.addListener(port => {
   if (port.name !== 'ytw') return;
   tabs.add(port);
-  port.onMessage.addListener(m => {
-    if (m.ack != null) return remoteSend(m); // a tab answering a remote command
-    send(m);
-    if (m.track) {
-      if (m.track.playing || !activeTab) activeTab = port;
-      if (port === activeTab) { lastTrack = m.track; remoteSend({ track: m.track }); }
-    }
-  });
-  port.onDisconnect.addListener(() => {
-    tabs.delete(port);
-    if (port === activeTab) {
-      activeTab = null; lastTrack = null;
-      // Another tab with a song takes over; if none reports one, the field goes.
-      for (const p of tabs) p.postMessage('resend');
-      setTimeout(() => { if (!activeTab) remoteSend({ notab: true }); }, 1500);
-    }
-    if (!tabs.size) { connect(); remoteConnect(); }
-  });
+  port.onMessage.addListener(send);
+  port.onDisconnect.addListener(() => { tabs.delete(port); if (!tabs.size) connect(); });
   if (!ws) connect();
-  if (!remote) remoteConnect();
 });
-
-// ---- Remote control for apps on this computer (e.g. an in-game overlay) ----
-// Besides the server/OBS connection above, the extension offers the current song
-// to a local app on 127.0.0.1 (ports 8975-8977) and takes play/pause/next/prev
-// back from it. Only while a YouTube Music tab is open; quietly retries otherwise.
-const REMOTE_PORTS = [8975, 8976, 8977];
-let remote = null, remoteOpen = false, remoteIdx = 0, remoteRetry = 0, activeTab = null, lastTrack = null;
-
-function remoteSend(m) {
-  if (remoteOpen && remote.bufferedAmount < 1 << 16) remote.send(JSON.stringify(m));
-}
-
-function remoteConnect() {
-  clearTimeout(remoteRetry);
-  if (!tabs.size) {
-    if (remote) { remote.onclose = null; remote.close(); remote = null; remoteOpen = false; }
-    return;
-  }
-  if (remote) return;
-  let sock, opened = false;
-  try { sock = remote = new WebSocket('ws://127.0.0.1:' + REMOTE_PORTS[remoteIdx]); } catch { remote = null; return; }
-  sock.onopen = () => {
-    opened = remoteOpen = true;
-    sock.send(JSON.stringify({ hello: 'ytw', v: 1 }));
-    sock.send(JSON.stringify(lastTrack ? { track: lastTrack } : { notab: !activeTab }));
-  };
-  sock.onmessage = e => {
-    let m; try { m = JSON.parse(e.data); } catch { return; }
-    if (m.ping != null) return sock.send(JSON.stringify({ pong: m.ping }));
-    if (!m.cmd) return;
-    const tab = activeTab && tabs.has(activeTab) ? activeTab : tabs.values().next().value;
-    if (tab) tab.postMessage({ cmd: m.cmd, id: m.id });
-    else remoteSend({ ack: m.id, ok: false });
-  };
-  sock.onclose = () => {
-    if (remote !== sock) return;
-    remote = null; remoteOpen = false;
-    if (!opened) remoteIdx = (remoteIdx + 1) % REMOTE_PORTS.length; // try the next port
-    remoteRetry = setTimeout(remoteConnect, opened ? 1000 : 5000);
-  };
-}
 
 chrome.storage.onChanged.addListener(ch => {
   if (ch.mode || ch.server || ch.key || ch.port || ch.password) { delay = 1000; connect(); }
