@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YT Music → OBS Now Playing
 // @namespace    yt-music-obs
-// @version      1.1.2
+// @version      1.1.3
 // @description  Sends the current YouTube Music track and a live audio spectrum to your YoutubeWatchr server.
 // @match        https://music.youtube.com/*
 // @grant        GM_xmlhttpRequest
@@ -52,14 +52,22 @@
 
   // With gapless playback YT Music plays the next song in the same <video>
   // without resetting it, so currentTime and duration keep counting across
-  // songs. The player bar's slider always shows the time of the current song:
-  // whenever the video clock drifts more than 1.5 s from it, re-align.
-  let offset = 0;
-  function songTime(v) {
+  // songs. So the song time starts over whenever the title changes, and the
+  // player bar (its slider or the "1:23 / 3:45" text) corrects it whenever
+  // the video clock drifts more than 1.5 s from what YT Music shows.
+  let offset = 0, offsetTitle = '';
+  const secs = s => s ? s.trim().split(':').reduce((a, b) => a * 60 + +b, 0) : NaN;
+  function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
-    const slider = $('ytmusic-player-bar #progress-bar');
-    const now = parseFloat(slider?.getAttribute('aria-valuenow'));
-    const max = parseFloat(slider?.getAttribute('aria-valuemax'));
+    if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
+    if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
+    const bar = $('ytmusic-player-bar');
+    const slider = bar?.querySelector('#progress-bar');
+    const [shown, total] = (bar?.querySelector('.time-info')?.textContent || '').split('/').map(secs);
+    let now = parseFloat(slider?.getAttribute('aria-valuenow'));
+    let max = parseFloat(slider?.getAttribute('aria-valuemax'));
+    if (!isFinite(now)) now = shown;
+    if (!(max > 0)) max = total;
     if (isFinite(now) && Math.abs(v.currentTime - offset - now) > 1.5) offset = v.currentTime - now;
     const duration = max > 0 ? max : (isFinite(v.duration) ? v.duration - offset : 0);
     return { position: Math.max(0, v.currentTime - offset), duration };
@@ -83,7 +91,7 @@
       album: md?.album || (byline.split('•')[1] || '').trim(),
       art: bigArt(art || domArt),
       playing: !!v && !v.paused && !v.ended,
-      ...songTime(v),
+      ...songTime(v, md?.title || domTitle || ''),
       ts: Date.now(),
     };
   }
