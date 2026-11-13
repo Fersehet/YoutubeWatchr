@@ -133,8 +133,9 @@ const LOGIN_ERRORS = {
 
 // Online every overlay profile has its own URL: /overlay/<key> is the default profile,
 // /overlay/<key>/<profile> another one. A deleted profile shows the default one.
-const queryOf = (u, profile) => (profile && u.queries && u.queries[profile] !== undefined ? u.queries[profile] : u.query) || '';
-const profileOf = (u, profile) => (profile && u.queries && u.queries[profile] !== undefined ? profile : '');
+const has = (u, profile) => !!profile && !!u.queries && Object.hasOwn(u.queries, profile);
+const queryOf = (u, profile) => (has(u, profile) ? u.queries[profile] : u.query) || '';
+const profileOf = (u, profile) => (has(u, profile) ? profile : '');
 
 function account(name) {
   const u = store.user(name);

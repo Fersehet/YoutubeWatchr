@@ -606,7 +606,7 @@ function save() {
   saveTimer = setTimeout(async () => {
     const data = saved(), q = p => params(true, { ...DEFAULTS, ...pick(state, SHARED), ...p.s });
     const queries = Object.fromEntries(profiles.filter(p => p.id !== 'default').map(p => [p.id, q(p)]));
-    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q(profiles[0]), queries, editor: data }) }).catch(() => null);
+    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: q(profiles.find(p => p.id === 'default')), queries, editor: data }) }).catch(() => null);
     if (r && r.status === 401) return location.replace('/login.html?next=' + encodeURIComponent('/editor?lang=' + lang));
     $('saved').textContent = t(r && r.ok ? 'saved' : 'saveFailed');
   }, 500);
