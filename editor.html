@@ -776,11 +776,24 @@ menu.querySelectorAll('[data-pact]').forEach(b => b.onclick = () => {
     renderTabs(); render();
   }
 });
+// navigator.clipboard only exists on HTTPS/localhost; over plain HTTP (e.g. LAN IP) fall back to execCommand
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).catch(() => legacyCopy(text));
+  return legacyCopy(text);
+}
+function legacyCopy(text) {
+  const ta = Object.assign(document.createElement('textarea'), { value: text, readOnly: true });
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.append(ta);
+  ta.select();
+  const ok = document.execCommand('copy');
+  ta.remove();
+  return ok ? Promise.resolve() : Promise.reject();
+}
 $('copy').onclick = e => {
-  const text = obsUrl;
   const done = () => { e.target.textContent = t('copied'); setTimeout(() => e.target.textContent = t('copyUrl'), 1500); };
   const select = () => { const r = document.createRange(); r.selectNodeContents($('url')); getSelection().removeAllRanges(); getSelection().addRange(r); };
-  try { navigator.clipboard.writeText(text).then(done, select); } catch { select(); }
+  copyText(obsUrl).then(done, select);
 };
 // ---- online server: account, keys, sign out ------------------------------------------
 async function loadAccount() {
@@ -800,7 +813,7 @@ function showAccount() {
 }
 document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => {
   const text = b.dataset.copy === 'sendKey' ? ACCOUNT.sendKey : $(b.dataset.copy).textContent;
-  navigator.clipboard.writeText(text).then(() => { b.textContent = t('copied'); setTimeout(() => b.textContent = t('copy'), 1500); });
+  copyText(text).then(() => { b.textContent = t('copied'); setTimeout(() => b.textContent = t('copy'), 1500); });
 });
 async function renew(which, question) {
   if (!confirm(question)) return;
