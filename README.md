@@ -117,6 +117,10 @@ The editor remembers your settings. Online it keeps them on the server, so they 
 
 Did your OBS URL or extension key end up on stream? Click **New OBS URL** or **New key** under **Connection**. The old one stops working right away.
 
+## Remote control for local apps
+
+Since extension 1.2.0 the extension also offers the current song to an app on your own computer and takes **play/pause, next and previous** back from it. It connects to `ws://127.0.0.1:8975` (or 8976/8977) only while a YouTube Music tab is open and quietly retries otherwise. Commands click YouTube Music's own player buttons. Only browser extensions can open this connection, web pages can't. Nothing changes for OBS or the server.
+
 ## Compact version
 
 Every theme also has a **compact** version, a slim one-line bar where the progress runs around the cover:
