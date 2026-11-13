@@ -15,7 +15,10 @@
   let port = null;
   function openPort() {
     try { port = chrome.runtime.connect({ name: 'ytw' }); } catch { return; } // extension was reloaded
-    port.onMessage.addListener(m => { if (m === 'resend') pushTrack(true); });
+    port.onMessage.addListener(m => {
+      if (m === 'resend') pushTrack(true);
+      else if (m && m.cmd) send({ ack: m.id, ok: control(m.cmd) });
+    });
     port.onDisconnect.addListener(() => { port = null; setTimeout(openPort, 1000); });
   }
   openPort();
@@ -81,6 +84,23 @@
     }
   }
   setInterval(() => pushTrack(true), 1000); // also keeps the progress bar in sync
+
+  // ---- remote control (play/pause/next/prev from a local app) --------------
+  // Clicks the player bar's own buttons, so YT Music behaves exactly as if you
+  // had clicked them; play/pause fall back to the <video> element.
+  function control(cmd) {
+    const bar = $('ytmusic-player-bar');
+    const v = video();
+    const click = sel => { const b = bar?.querySelector(sel); if (!b) return false; b.click(); return true; };
+    let ok = false;
+    if (cmd === 'next') ok = click('.next-button');
+    else if (cmd === 'prev') ok = click('.previous-button');
+    else if (cmd === 'toggle') ok = click('#play-pause-button') || (!!v && (v.paused ? v.play() : v.pause(), true));
+    else if (cmd === 'play') ok = !v || !v.paused || click('#play-pause-button') || (!!v && (v.play(), true));
+    else if (cmd === 'pause') ok = !v || v.paused || click('#play-pause-button') || (!!v && (v.pause(), true));
+    setTimeout(() => pushTrack(true), 300);
+    return ok;
+  }
 
   // ---- audio spectrum ------------------------------------------------------
   // Hooking the <video> into Web Audio reroutes its sound through our
