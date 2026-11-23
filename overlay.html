@@ -629,6 +629,48 @@
   body.compact.wow #title { font-weight: 700; color: var(--accent); }
   body.compact.wow #artist { padding-left: 14px; border-left-color: rgba(255,255,255,.2); color: #d3d7df; }
 
+  /* ---- theme=rocket: Rocket League. Arena HUD look: navy panel with a blue team
+     edge, a skewed orange tag, condensed italic title, a team-split spectrum
+     (blue | grey | orange) and the progress as a segmented boost meter. */
+  body.rocket { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --frost: 0; --bar-round: 1; --bar-glow: 0;
+    --bar1: #1f8fff; --bar2: #ff8a1f; --cap: rgba(255,255,255,.75); font-variant-numeric: tabular-nums; }
+  body.rocket #glow { display: none; }
+  body.rocket #card { width: 560px; border-radius: 0; gap: 18px; padding: 14px 48px 14px 22px;
+    background: linear-gradient(100deg, rgba(8,15,30,.95), rgba(13,24,46,.9));
+    clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 100%, 0 100%); box-shadow: none; }
+  body.rocket #card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #1f8fff; }
+  body.rocket #card::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, #1f8fff 0 50%, #ff8a1f 50% 100%); }
+  body.rocket #eq { min-height: 46px; margin-top: 4px; }
+  body.rocket #art-wrap { width: 128px; height: 128px; border-radius: 4px; box-shadow: 0 0 0 2px rgba(31,143,255,.9); }
+  body.rocket #label { align-self: flex-start; margin-left: 4px; padding: 3px 12px 2px; background: #ff8a1f; color: #1d0e00;
+    font: 400 14px/1 "Anton", Impact, sans-serif; letter-spacing: .1em; transform: skewX(-12deg); }
+  body.rocket #label::before { display: none; }
+  body.rocket #title { font: 400 28px/1.05 "Anton", Impact, sans-serif; font-style: italic; text-transform: uppercase; letter-spacing: .01em; margin-top: 8px; color: #fff; }
+  body.rocket #artist { font-size: 15px; color: #9fc6ff; margin-top: 3px; }
+  body.rocket #progress { font-size: 13px; color: #c9d6ea; gap: 10px; }
+  /* progress = boost meter: slanted segments, orange to gold, glowing */
+  body.rocket #progress { filter: drop-shadow(0 0 3px rgba(255,140,0,.55)); }
+  body.rocket #bar { height: 11px; border-radius: 0; background: rgba(255,255,255,.1); transform: skewX(-24deg);
+    -webkit-mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8.5px); mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8.5px); }
+  body.rocket #bar #fill { border-radius: 0; background: linear-gradient(90deg, #ff5a00, #ff9a1c 55%, #ffd84a); }
+  /* compact: same pill as every other theme (round cover with progress ring, small equalizer, title | artist),
+     dressed in Rocket colours; the ring around the cover is the segmented boost meter */
+  body.compact.rocket { --cfs: 18px; }
+  body.compact.rocket #card { width: var(--cw, 460px); padding: 10px 22px 10px 10px; gap: 12px; clip-path: none; border-radius: 999px;
+    background: linear-gradient(100deg, rgba(8,15,30,.95), rgba(13,24,46,.9)); box-shadow: inset 0 0 0 1px rgba(31,143,255,.35); }
+  body.compact.rocket #card::before, body.compact.rocket #card::after { display: none; }
+  html body.compact.rocket #title { font-size: 21px; font-family: "Anton", Impact, sans-serif; font-style: italic; text-transform: uppercase; font-weight: 400; letter-spacing: .01em; }
+  html body.compact.rocket #artist { color: #9fc6ff; border-left-color: rgba(159,198,255,.3); }
+  body.compact.rocket #eq { width: 84px; height: 28px; }
+  body.rocket #title span { padding-right: .22em; }
+  body.compact.rocket #art-wrap { width: 42px; height: 42px; border-radius: 50%; background: none; box-shadow: none; overflow: visible; }
+  body.compact.rocket #art-wrap::before { content: ""; position: absolute; inset: 0; border-radius: 50%; z-index: 0;
+    background: conic-gradient(from 200deg, #ff5a00, #ff9a1c calc(var(--p, 0) * .5%), #ffd84a calc(var(--p, 0) * 1%), rgba(255,255,255,.13) 0);
+    -webkit-mask: repeating-conic-gradient(#000 0 9deg, transparent 9deg 12deg); mask: repeating-conic-gradient(#000 0 9deg, transparent 9deg 12deg);
+    filter: drop-shadow(0 0 2px rgba(255,140,0,.6)); }
+  body.compact.rocket #art-wrap img { inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); border-radius: 50%; z-index: 2; box-shadow: 0 0 0 2px #0b1426; }
+  /* scrolling names fade out at the edges instead of being cut */
+  body.rocket .marquee.scroll { -webkit-mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); }
   /* compact versions keep the hard edges */
   body.compact.lol #card, body.compact.cs #card { border-radius: 0; }
   body.compact.cs #label { display: none; }
@@ -704,7 +746,7 @@
 const SAVED = typeof window.YTW_SAVED === 'string' && !location.search;
 const q = new URLSearchParams(SAVED ? window.YTW_SAVED : location.search);
 const opt = {
-  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon | macos | wow ("minimal" = classic + compact)
+  theme: q.get('theme') || 'classic', // classic | glass | vinyl | retro | truedamage | lol | cs | faceit | iracing | f1 | pinkribbon | macos | wow | rocket ("minimal" = classic + compact)
   compact: q.get('compact') === '1' || q.get('theme') === 'minimal',
   bars: +q.get('bars') || (q.get('compact') === '1' || q.get('theme') === 'minimal' ? 7 : q.get('theme') === 'faceit' ? 12 : 32),
   accent: q.get('accent'),            // fixed hex color; otherwise taken from the cover
@@ -735,16 +777,16 @@ const opt = {
 };
 if (opt.theme === 'minimal') opt.theme = 'classic';
 if (opt.theme === 'truedamage') document.body.classList.add('vinyl');
-document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon', 'macos', 'wow'].includes(opt.theme) ? opt.theme : 'classic');
+document.body.classList.add(['glass', 'vinyl', 'retro', 'lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon', 'macos', 'wow', 'rocket'].includes(opt.theme) ? opt.theme : 'classic');
 document.body.classList.toggle('compact', opt.compact);
-const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900', pinkribbon: 'Lato:wght@400;700&family=Playfair+Display:wght@700', wow: 'Geist:wght@400;600;700' };
+const FONTS = { retro: 'VT323', lol: 'Cinzel:wght@600;700', truedamage: 'Cinzel:wght@600;700', cs: 'Rajdhani:wght@600;700', faceit: 'Geist:wght@400;600;700', iracing: 'Roboto:wght@500;700', f1: 'Titillium+Web:wght@400;700;900', pinkribbon: 'Lato:wght@400;700&family=Playfair+Display:wght@700', wow: 'Geist:wght@400;600;700', rocket: 'Anton&family=Geist:wght@400;600' };
 if (FONTS[opt.theme]) {
   const f = document.createElement('link');
   f.rel = 'stylesheet'; f.href = opt.fonts || `https://fonts.googleapis.com/css2?family=${FONTS[opt.theme]}&display=swap`;
   document.head.appendChild(f);
 }
 // Game themes use their own palette instead of colors picked from the cover.
-const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'], pinkribbon: ['#e0457b', '#f7a1c0'], wow: ['#ffd100', '#ffd100'] }[opt.theme];
+const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'], pinkribbon: ['#e0457b', '#f7a1c0'], wow: ['#ffd100', '#ffd100'], rocket: ['#1f8fff', '#ff8a1f'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
@@ -969,6 +1011,7 @@ function draw(now) {
   const gap = Math.min(3, w / opt.bars * .3), bw = (w - gap * (opt.bars - 1)) / opt.bars;
   if (opt.theme === 'truedamage') { drawSuperstar(w, h, bw, gap, pct); }
   else if (opt.theme === 'iracing') { drawShiftLights(w, h, bw, gap); }
+  else if (opt.theme === 'rocket') { drawTeams(w, h); }
   else for (let i = 0; i < opt.bars; i++) {
     // Fast attack, slower release, falling peak caps.
     level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .55 : .18);
@@ -1029,6 +1072,49 @@ function drawSuperstar(w, h, bw, gap, pct) {
   g.lineWidth = 1.5; g.strokeStyle = '#c8aa6e'; g.stroke();
   g.beginPath(); g.moveTo(cx - 2.8, cy + .2); g.lineTo(cx - .6, cy + 2.3); g.lineTo(cx + 3, cy - 2.2);
   g.strokeStyle = '#e8f6ff'; g.lineWidth = 1.6; g.stroke();
+}
+
+// Rocket: team split. Mirrored from the middle like kickoff: bass in the centre,
+// highs out to the walls; blue team left, orange team right. Bars are built from
+// slanted segments like the boost meter, with white peak caps; a grey neutral bar in the middle.
+const tPeak = [];
+function drawTeams(w, h) {
+  for (let i = 0; i < opt.bars; i++) level[i] += (target[i] - level[i]) * (target[i] > level[i] ? .5 : .14);
+  const half = opt.compact ? 5 : 14, mid = w / 2, slant = h * .18;
+  const gap = opt.compact ? 2 : 2.5, bw = (w - gap * 2 * half) / (2 * half + 1), cw = bw;
+  const segH = Math.max(2.4, h / 11), sgap = 1.4, rows = Math.floor((h - 2) / (segH + sgap));
+  const col = (side, t) => side < 0
+    ? `rgb(${31 + 95 * t | 0},${143 + 60 * t | 0},255)`        // blue -> light blue
+    : `rgb(255,${138 + 70 * t | 0},${31 + 45 * t | 0})`;        // orange -> gold
+  for (let k = 0; k < half; k++) {
+    const band = Math.floor(k / half * opt.bars * .75);
+    const v = Math.min(1, (level[band] || 0) * (1.15 - k / half * .25));
+    tPeak[k] = Math.max(v, (tPeak[k] || 0) - .014);
+    const lit = Math.round(v * rows), pk = Math.min(rows - 1, Math.round(tPeak[k] * rows));
+    for (const side of [-1, 1]) {
+      const x0 = side < 0 ? mid - cw / 2 - (k + 1) * (bw + gap) : mid + cw / 2 + gap + k * (bw + gap);
+      for (let r = 0; r < rows; r++) {
+        const y = h - (r + 1) * (segH + sgap), on = r < lit, t = r / Math.max(1, rows - 1), dx = slant * (1 - (y + segH) / h);
+        if (!on && r !== pk) continue;
+        g.globalAlpha = on ? .72 + .28 * t : 1;
+        g.fillStyle = r === pk && !on ? 'rgba(255,255,255,.9)' : col(side, t);
+        g.shadowColor = side < 0 ? 'rgba(31,143,255,.9)' : 'rgba(255,138,31,.9)'; g.shadowBlur = on && r === lit - 1 ? 8 : 0;
+        g.beginPath(); g.moveTo(x0 + dx + slant / h * segH, y); g.lineTo(x0 + bw + dx + slant / h * segH, y); g.lineTo(x0 + bw + dx, y + segH); g.lineTo(x0 + dx, y + segH); g.closePath(); g.fill();
+      }
+    }
+  }
+  g.globalAlpha = 1; g.shadowBlur = 0;
+  // neutral centre bar (grey), the kick drum: same slanted segments, no team colour
+  const cv = Math.min(1, ((level[0] || 0) + (level[1] || 0)) / 2 * 1.15);
+  tPeak.c = Math.max(cv, (tPeak.c || 0) - .014);
+  const clit = Math.round(cv * rows), cpk = Math.min(rows - 1, Math.round(tPeak.c * rows)), cx0 = mid - cw / 2;
+  for (let r = 0; r < rows; r++) {
+    const on = r < clit; if (!on && r !== cpk) continue;
+    const y = h - (r + 1) * (segH + sgap), t = r / Math.max(1, rows - 1), dx = slant * (1 - (y + segH) / h);
+    const c = 150 + 70 * t | 0;
+    g.fillStyle = r === cpk && !on ? 'rgba(255,255,255,.9)' : `rgb(${c},${c + 6},${c + 16})`;
+    g.beginPath(); g.moveTo(cx0 + dx + slant / h * segH, y); g.lineTo(cx0 + cw + dx + slant / h * segH, y); g.lineTo(cx0 + cw + dx, y + segH); g.lineTo(cx0 + dx, y + segH); g.closePath(); g.fill();
+  }
 }
 
 // iRacing: the bars as the shift lights of a sim-racing wheel. Columns of
