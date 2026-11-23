@@ -641,7 +641,8 @@
   body.rocket #card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #1f8fff; }
   body.rocket #card::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, #1f8fff 0 50%, #ff8a1f 50% 100%); }
   body.rocket #eq { min-height: 46px; margin-top: 4px; }
-  body.rocket #art-wrap { width: 128px; height: 128px; border-radius: 4px; box-shadow: 0 0 0 2px rgba(31,143,255,.9); }
+  body.rocket #art-wrap { width: 144px; height: 144px; align-self: center; flex: none; border-radius: 4px; box-shadow: 0 0 0 2px rgba(31,143,255,.9); }
+  body.compact.rocket #art-wrap { align-self: center; aspect-ratio: auto; }
   body.rocket #label { align-self: flex-start; margin-left: 4px; padding: 3px 12px 2px; background: #ff8a1f; color: #1d0e00;
     font: 400 14px/1 "Anton", Impact, sans-serif; letter-spacing: .1em; transform: skewX(-12deg); }
   body.rocket #label::before { display: none; }
