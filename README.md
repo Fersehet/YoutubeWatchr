@@ -8,10 +8,10 @@
 Show the song you're playing on **YouTube Music** in your OBS stream: cover, title, artist, progress and an equalizer that moves with the music.
 
 <p align="center">
-  <img src="docs/themes.gif" alt="The overlay cycling through all thirteen themes: Classic, Liquid glass, Vinyl, Retro hi-fi, True Damage, League of Legends, Counter-Strike, FACEIT, iRacing, Formula 1, Pink Ribbon, macOS and World of Warcraft, each with a live equalizer" width="720">
+  <img src="docs/themes.gif" alt="The overlay cycling through all fourteen themes: Classic, Liquid glass, Vinyl, Retro hi-fi, True Damage, League of Legends, Counter-Strike, FACEIT, iRacing, Formula 1, Pink Ribbon, macOS, World of Warcraft and Rocket League, each with a live equalizer" width="720">
 </p>
 
-- 13 designs, from a clean card to a spinning record, plus game styles for League of Legends, Counter-Strike, FACEIT and World of Warcraft, racing styles for iRacing and Formula 1, a pink ribbon for breast cancer awareness and a macOS window
+- 14 designs, from a clean card to a spinning record, plus game styles for League of Legends, Counter-Strike, FACEIT, World of Warcraft and Rocket League, racing styles for iRacing and Formula 1, a pink ribbon for breast cancer awareness and a macOS window
 - An editor in your browser to change colors, fonts, size and more, with a live preview and several overlay profiles
 - Host it on your own server with a login: one OBS URL that never changes, and your changes show up in OBS right away
 - Or run it only on your own computer, without an account: with just the browser extension through OBS WebSocket, or with a small local server
@@ -131,7 +131,7 @@ Every theme also has a **compact** version, a slim one-line bar where the progre
   <img src="docs/compact.png" alt="Compact versions of the Liquid glass and Vinyl themes">
 </p>
 
-Most themes take their colors from the album cover. The game, racing and `pinkribbon` themes use their own colors, so their card looks the same with every cover. `pinkribbon` is a light pink card with the pink ribbon of breast cancer awareness. In `iracing` the equalizer looks like the shift lights of a sim-racing wheel: green, yellow, red and blue LEDs. `macos` is a dark macOS window with the three window buttons in the title bar. `wow` is a dark card with a yellow ring around the cover and a yellow progress bar.
+Most themes take their colors from the album cover. The game, racing and `pinkribbon` themes use their own colors, so their card looks the same with every cover. `pinkribbon` is a light pink card with the pink ribbon of breast cancer awareness. In `iracing` the equalizer looks like the shift lights of a sim-racing wheel: green, yellow, red and blue LEDs. `macos` is a dark macOS window with the three window buttons in the title bar. `wow` is a dark card with a yellow ring around the cover and a yellow progress bar. `rocket` looks like a Rocket League HUD: the equalizer is split into the two teams, blue on the left and orange on the right with a grey bar in the middle, and the progress fills up like the boost meter. In the compact version the boost meter runs around the cover.
 
 ## All options
 
@@ -141,7 +141,7 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 
 | Option | Example | What it does |
 |---|---|---|
-| `theme` | `?theme=vinyl` | `classic` (default), `glass`, `vinyl`, `retro`, `truedamage`, `lol`, `cs`, `faceit`, `iracing`, `f1`, `pinkribbon`, `macos` or `wow` |
+| `theme` | `?theme=vinyl` | `classic` (default), `glass`, `vinyl`, `retro`, `truedamage`, `lol`, `cs`, `faceit`, `iracing`, `f1`, `pinkribbon`, `macos`, `wow` or `rocket` |
 | `compact` | `?compact=1` | Slim one-line version |
 | `width` | `?compact=1&width=380` | Width of the compact bar in pixels (default 460). Long names scroll inside |
 | `scale` | `?scale=1.5` | Make everything bigger or smaller (0.3 to 3). Multiply the OBS width and height by the same number |
