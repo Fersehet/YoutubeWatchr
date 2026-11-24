@@ -119,8 +119,12 @@
   // through its own Web Audio graph. An element can feed only one graph, so we
   // must not grab it (that would break the other extension or fail ourselves);
   // page-audio.js taps that graph instead and sends us the bars.
-  let pageBandsAt = 0;
-  const pageAudio = () => Date.now() - pageBandsAt < 2000 || !!window.getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  // Velvetone only builds its graph when one of its sound features is on, and only
+  // after a click; its CSS variable is there either way. So when it is installed we
+  // wait a moment after the click and hook only if it hasn't taken the <video>.
+  let pageBandsAt = 0, waitUntil = 0, waiting = false;
+  const pageAudio = () => document.documentElement.hasAttribute('data-ytw-page-audio') || Date.now() - pageBandsAt < 2000;
+  const velvetone = () => !!window.getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
   document.addEventListener('ytw:bands', e => {
     let bands;
     try { bands = JSON.parse(e.detail); } catch { return; }
@@ -131,7 +135,15 @@
 
   function hook() {
     const v = video();
-    if (!v || v === hookedEl || pageAudio()) return;
+    if (!v || v === hookedEl || pageAudio() || waiting) return;
+    if (velvetone()) {
+      if (!waitUntil) waitUntil = Date.now() + 1500;
+      if (Date.now() < waitUntil) {
+        waiting = true;
+        setTimeout(() => { waiting = false; hook(); }, waitUntil - Date.now() + 50);
+        return;
+      }
+    }
     try {
       if (!ctx) {
         ctx = new AudioContext();

@@ -137,7 +137,12 @@
   // must not grab it; we listen to that graph's output (after its EQ and
   // crossfade) instead.
   const PAGE = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
-  const foreignAudio = () => !!PAGE.__bytmAudio || !!getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  // Velvetone only builds its graph when one of its sound features is on, and only
+  // after a click; its CSS variable is there either way. So when it is installed we
+  // wait a moment after the click and hook only if it hasn't taken the <video>.
+  const foreignAudio = () => !!PAGE.__bytmAudio;
+  const velvetone = () => !!getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  let waitUntil = 0, waiting = false;
   let pageOut = null;
   function hookPage() {
     const b = PAGE.__bytmAudio;
@@ -164,7 +169,15 @@
 
   function hook() {
     const v = video();
-    if (!v || v === hookedEl || foreignAudio()) return;
+    if (!v || v === hookedEl || foreignAudio() || pageOut || waiting) return;
+    if (velvetone()) {
+      if (!waitUntil) waitUntil = Date.now() + 1500;
+      if (Date.now() < waitUntil) {
+        waiting = true;
+        setTimeout(() => { waiting = false; hook(); }, waitUntil - Date.now() + 50);
+        return;
+      }
+    }
     try {
       if (!ctx) {
         ctx = new AudioContext();

@@ -31,8 +31,13 @@
 
   // One analyser per AudioContext, fed by every node that plays to the speakers.
   const taps = new Map();
+  // Tells content.js that the page plays the <video> through Web Audio itself, so it
+  // must not grab the element.
+  const mark = () => document.documentElement?.setAttribute('data-ytw-page-audio', '');
   function tap(node) {
     const ctx = node.context;
+    if (!(ctx instanceof AudioContext)) return; // skip OfflineAudioContext (rendering, fingerprinting)
+    mark();
     let t = taps.get(ctx);
     if (!t) {
       const analyser = ctx.createAnalyser();
@@ -51,6 +56,12 @@
     const out = connect.call(this, dest, ...rest);
     try { if (dest instanceof AudioDestinationNode) tap(this); } catch { /* never break the page's audio */ }
     return out;
+  };
+  const cmes = AudioContext.prototype.createMediaElementSource;
+  AudioContext.prototype.createMediaElementSource = function (el) {
+    const node = cmes.call(this, el);
+    mark();
+    return node;
   };
   proto.disconnect = function (...args) {
     const out = disconnect.apply(this, args);
@@ -74,22 +85,18 @@
       else if (ctx.state === 'running') t = cur;
     }
     if (!t) return;
-    const video = document.querySelector('video');
-    let bands;
-    if (!video || video.paused) {
-      if (silent) return;
-      bands = new Array(BANDS).fill(0);
-      silent = true;
-    } else {
-      silent = false;
-      t.analyser.getFloatFrequencyData(t.freq);
-      bands = t.bins.map(([lo, hi, fc]) => {
-        let p = 0;
-        for (let i = lo; i < hi; i++) p += Math.pow(10, t.freq[i] / 10);
-        const db = 10 * Math.log10(p / (hi - lo) + 1e-20) + 3 * Math.log2(fc / 1000);
-        return Math.round(255 * Math.min(1, Math.max(0, (db - DB_FLOOR) / (DB_CEIL - DB_FLOOR))));
-      });
-    }
+    // No check for a paused <video>: a crossfade tail can still be playing then.
+    // Silence comes out as all-zero bars, which are sent once.
+    t.analyser.getFloatFrequencyData(t.freq);
+    const bands = t.bins.map(([lo, hi, fc]) => {
+      let p = 0;
+      for (let i = lo; i < hi; i++) p += Math.pow(10, t.freq[i] / 10);
+      const db = 10 * Math.log10(p / (hi - lo) + 1e-20) + 3 * Math.log2(fc / 1000);
+      return Math.round(255 * Math.min(1, Math.max(0, (db - DB_FLOOR) / (DB_CEIL - DB_FLOOR))));
+    });
+    const quiet = bands.every(b => b === 0);
+    if (quiet && silent) return;
+    silent = quiet;
     // A string crosses from the page into the extension's world reliably; objects don't.
     document.dispatchEvent(new CustomEvent('ytw:bands', { detail: JSON.stringify(bands) }));
   }, 1000 / BAND_FPS);
