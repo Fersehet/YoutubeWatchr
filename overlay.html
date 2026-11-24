@@ -696,6 +696,11 @@
   body.custom-radius #card { border-radius: var(--custom-radius) !important; clip-path: none !important; }
   body.custom-font #card, body.custom-font #card * { font-family: var(--custom-font) !important; }
   body.no-label #label, body.no-cover #art-wrap, body.no-eq #eq { display: none !important; }
+  /* Without the cover the card keeps the height it has with one, so the equalizer (which
+     fills the space under the text in most themes) doesn't shrink to nothing. Hiding the
+     equalizer is its own option (eq=0). */
+  body.no-cover:not(.compact):not(.no-eq) #info { min-height: var(--no-cover-h, 128px); }
+  body.no-cover.macos:not(.compact) #info { --no-cover-h: 120px; }
   body.no-eq.truedamage #bar { visibility: visible; }
   body.no-eq:not(.faceit):not(.compact) #progress { margin-top: auto; }
   body.no-eq.faceit #artist { grid-column: 2 / 4; }
@@ -1038,6 +1043,23 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
+
+// Big card: with some themes and fonts the text next to the cover runs taller than the
+// cover's base size. Then the cover grows to the same height, and stays square
+// (CSS aspect-ratio can't follow a stretched height in a flex row, so it's set here).
+function fitCover() {
+  const art = $('art-wrap'), b = document.body.classList;
+  art.style.width = art.style.height = '';
+  if (b.contains('compact') || b.contains('vinyl') || b.contains('faceit') || !opt.cover) return;
+  const cs = getComputedStyle(art);
+  const want = $('info').offsetHeight - parseFloat(cs.marginTop) - parseFloat(cs.marginBottom);
+  if (want > art.offsetHeight + .5) art.style.width = art.style.height = want + 'px';
+}
+let fitQueued = 0;
+new ResizeObserver(() => {
+  if (fitQueued) return;
+  fitQueued = requestAnimationFrame(() => { fitQueued = 0; fitCover(); });
+}).observe($('info'));
 
 // True Damage: bars up to the playhead glow magenta to cyan, the rest stay
 // dim, over a red-to-gold progress line with a round marker.
