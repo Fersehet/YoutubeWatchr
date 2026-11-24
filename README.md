@@ -192,7 +192,7 @@ The extension and the sign-in page come in English, German, Russian and French: 
 - **Nothing shows up in OBS (OBS WebSocket):** check that the OBS URL has `obs=1` and the same password, and that **Local file** is unticked. Reload YouTube Music.
 - **Nothing shows up in OBS (local server):** check that the server window is still open, and that the extension shows **Connected to the server** or the userscript is on for music.youtube.com (the Tampermonkey icon shows a "1" on that tab). Reload YouTube Music.
 - **The equalizer moves but not with the music:** click once on the YouTube Music page.
-- **You use another YouTube Music extension with its own sound (EQ, crossfade, e.g. Velvetone):** YoutubeWatchr then leaves the audio alone and shows the sound after that extension's EQ. The bars follow the YouTube Music volume. Update the extension or userscript to 1.1.4 or newer and reload YouTube Music.
+- **You use another YouTube Music extension with its own sound (EQ, crossfade, e.g. Velvetone):** YoutubeWatchr then leaves the audio alone and shows the sound after that extension's EQ. Update the extension or userscript to 1.1.4 or newer and reload YouTube Music.
 - **YouTube Music goes quiet:** click once on the page. If it stays quiet, turn the extension or userscript off, reload, and open an issue.
 - **Port 8974 is already in use:** set another port, for example `PORT=9000` in `.env` (on Windows without `.env`: `set PORT=9000` before `npm start`), and use the same port in the extension or at the top of the userscript.
 
