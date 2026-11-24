@@ -2,6 +2,7 @@
 // music.youtube.com. background.js sends them to your YoutubeWatchr server, or
 // broadcasts them through OBS WebSocket (OBS 28+) for overlay.html?obs=1. Track and spectrum
 // code is the same as in yt-music-now-playing.user.js; only the transport differs.
+// page-audio.js supplies the spectrum when another extension owns the page audio.
 (function () {
   'use strict';
 
@@ -114,9 +115,23 @@
     }
   }
 
+  // Another extension (e.g. Velvetone: EQ, crossfade) already plays the <video>
+  // through its own Web Audio graph. An element can feed only one graph, so we
+  // must not grab it (that would break the other extension or fail ourselves);
+  // page-audio.js taps that graph instead and sends us the bars.
+  let pageBandsAt = 0;
+  const pageAudio = () => Date.now() - pageBandsAt < 2000 || !!window.getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  document.addEventListener('ytw:bands', e => {
+    let bands;
+    try { bands = JSON.parse(e.detail); } catch { return; }
+    if (!Array.isArray(bands) || bands.length !== BANDS) return;
+    pageBandsAt = Date.now();
+    send({ bands });
+  });
+
   function hook() {
     const v = video();
-    if (!v || v === hookedEl) return;
+    if (!v || v === hookedEl || pageAudio()) return;
     try {
       if (!ctx) {
         ctx = new AudioContext();
@@ -145,7 +160,7 @@
   let sentSilence = false;
   setInterval(() => {
     const v = video();
-    if (!analyser || !v || hookedEl !== v) return;
+    if (!analyser || !v || hookedEl !== v || Date.now() - pageBandsAt < 2000) return;
     if (ctx.state !== 'running') { ctx.resume(); return; }
     if (v.paused) {
       if (!sentSilence) { send({ bands: new Array(BANDS).fill(0) }); sentSilence = true; }

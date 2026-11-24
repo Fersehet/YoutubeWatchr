@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YT Music → OBS Now Playing
 // @namespace    yt-music-obs
-// @version      1.1.3
+// @version      1.1.4
 // @description  Sends the current YouTube Music track and a live audio spectrum to your YoutubeWatchr server.
 // @match        https://music.youtube.com/*
 // @grant        GM_xmlhttpRequest
@@ -132,9 +132,39 @@
     }
   }
 
+  // Another extension (e.g. Velvetone: EQ, crossfade) already plays the <video>
+  // through its own Web Audio graph. An element can feed only one graph, so we
+  // must not grab it; we listen to that graph's output (after its EQ and
+  // crossfade) instead.
+  const PAGE = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+  const foreignAudio = () => !!PAGE.__bytmAudio || !!getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  let pageOut = null;
+  function hookPage() {
+    const b = PAGE.__bytmAudio;
+    if (!b?.limiter || b.ctx?.state === 'closed') return false;
+    if (pageOut === b.limiter) return true;
+    try {
+      ctx = b.ctx;
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 4096;
+      analyser.smoothingTimeConstant = 0.4;
+      b.limiter.connect(analyser); // a side branch: the speakers keep their own connection
+      freq = new Float32Array(analyser.frequencyBinCount);
+      buildBands(ctx.sampleRate, analyser.fftSize);
+      pageOut = b.limiter;
+      hookedEl = null;
+      console.log('[YoutubeWatchr] spectrum taps the page audio');
+      return true;
+    } catch (e) {
+      console.warn('[YoutubeWatchr] could not tap the page audio', e);
+      return false;
+    }
+  }
+  setInterval(() => { if (foreignAudio()) hookPage(); }, 1000);
+
   function hook() {
     const v = video();
-    if (!v || v === hookedEl) return;
+    if (!v || v === hookedEl || foreignAudio()) return;
     try {
       if (!ctx) {
         ctx = new AudioContext();
@@ -156,15 +186,15 @@
 
   function onGesture() {
     hook();
-    if (ctx && ctx.state !== 'running') ctx.resume();
+    if (ctx && !pageOut && ctx.state !== 'running') ctx.resume();
   }
   ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, onGesture, true));
 
   let sentSilence = false;
   setInterval(() => {
     const v = video();
-    if (!analyser || !v || hookedEl !== v) return;
-    if (ctx.state !== 'running') { ctx.resume(); return; }
+    if (!analyser || !v || (hookedEl !== v && !pageOut)) return;
+    if (ctx.state !== 'running') { if (!pageOut) ctx.resume(); return; }
     if (v.paused) {
       if (!sentSilence) { send({ bands: new Array(BANDS).fill(0) }); sentSilence = true; }
       return;
@@ -191,7 +221,7 @@
     v.__ytObs = true;
     ['play', 'pause', 'ended', 'loadedmetadata', 'seeked'].forEach(ev =>
       v.addEventListener(ev, () => pushTrack(true)));
-    v.addEventListener('play', () => { if (ctx && ctx.state !== 'running') ctx.resume(); });
+    v.addEventListener('play', () => { if (ctx && !pageOut && ctx.state !== 'running') ctx.resume(); });
   }
   let pending = 0;
   new MutationObserver(() => {
