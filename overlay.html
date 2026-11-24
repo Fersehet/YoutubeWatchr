@@ -620,7 +620,10 @@
   /* compact: a slim bar. Thick accent ring with a dim rest, dividers, title in the accent */
   body.compact.wow { --cfs: 18px; }
   body.compact.wow #card { border-radius: 999px; padding: 8px 26px 8px 8px; gap: 14px; background: rgba(18,20,26,.74); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
-  body.compact.wow #card::before, body.compact.wow #card::after { display: none; }
+  body.compact.wow #card::after { display: none; }
+  /* the same golden glow as on the big card, sized for the pill */
+  body.compact.wow #card::before { border-radius: inherit;
+    -webkit-mask-image: radial-gradient(240px 90px at 100% 0%, #000, transparent 72%); mask-image: radial-gradient(240px 90px at 100% 0%, #000, transparent 72%); }
   body.compact.wow #art-wrap { width: 44px; height: 44px; margin: 0; box-shadow: none; }
   body.compact.wow:not(.no-progress) #art-wrap { background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--accent) 32%, #3a3e48) 0); }
   body.compact.wow:not(.no-progress) #art-wrap img { inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); }
