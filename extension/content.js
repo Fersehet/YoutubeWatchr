@@ -2,7 +2,8 @@
 // music.youtube.com. background.js sends them to your YoutubeWatchr server, or
 // broadcasts them through OBS WebSocket (OBS 28+) for overlay.html?obs=1. Track and spectrum
 // code is the same as in yt-music-now-playing.user.js; only the transport differs.
-// page-audio.js supplies the spectrum when another extension owns the page audio.
+// page-bridge.js (page world) supplies YT Music's own song clock, and the spectrum
+// when another extension owns the page audio.
 (function () {
   'use strict';
 
@@ -38,10 +39,20 @@
   // songs. So the song time starts over whenever the title changes, and the
   // player bar (its slider or the "1:23 / 3:45" text) corrects it whenever
   // the video clock drifts more than 1.5 s from what YT Music shows.
+  // Preferred: YT Music's own player clock from page-bridge.js. It starts at 0 for
+  // every song by itself; the calculation below is only the fallback.
+  let clock = null;
+  document.addEventListener('ytw:time', e => {
+    try { const c = JSON.parse(e.detail); if (c.duration > 0) clock = { ...c, at: Date.now() }; } catch { /* ignore */ }
+  });
   let offset = 0, offsetTitle = '';
   const secs = s => s ? s.trim().split(':').reduce((a, b) => a * 60 + +b, 0) : NaN;
   function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
+    if (clock && Date.now() - clock.at < 1500) {
+      const run = v.paused ? 0 : (Date.now() - clock.at) / 1000;
+      return { position: Math.min(clock.duration, clock.position + run), duration: clock.duration };
+    }
     if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
     if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
     const bar = $('ytmusic-player-bar');
@@ -118,7 +129,7 @@
   // Another extension (e.g. Velvetone: EQ, crossfade) already plays the <video>
   // through its own Web Audio graph. An element can feed only one graph, so we
   // must not grab it (that would break the other extension or fail ourselves);
-  // page-audio.js taps that graph instead and sends us the bars.
+  // page-bridge.js taps that graph instead and sends us the bars.
   // Velvetone only builds its graph when one of its sound features is on, and only
   // after a click; its CSS variable is there either way. So when it is installed we
   // wait a moment after the click and hook only if it hasn't taken the <video>.

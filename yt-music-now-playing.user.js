@@ -57,8 +57,21 @@
   // the video clock drifts more than 1.5 s from what YT Music shows.
   let offset = 0, offsetTitle = '';
   const secs = s => s ? s.trim().split(':').reduce((a, b) => a * 60 + +b, 0) : NaN;
+  // Preferred: YT Music's own player clock. It starts at 0 for every song by
+  // itself, also with gapless playback and crossfades; the calculation below is
+  // only the fallback.
+  function playerClock() {
+    try {
+      const p = (typeof unsafeWindow !== 'undefined' ? unsafeWindow : window).document.getElementById('movie_player');
+      if (typeof p?.getCurrentTime !== 'function') return null;
+      const position = +p.getCurrentTime(), duration = +p.getDuration();
+      return isFinite(position) && duration > 0 ? { position: Math.min(duration, position), duration } : null;
+    } catch { return null; }
+  }
   function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
+    const clock = playerClock();
+    if (clock) return clock;
     if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
     if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
     const bar = $('ytmusic-player-bar');

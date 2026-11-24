@@ -1,14 +1,33 @@
-// YoutubeWatchr: spectrum for pages whose sound already runs through Web Audio.
-// Some YT Music extensions (e.g. Velvetone with its EQ and crossfade) route the
-// <video> through their own AudioContext in the page. An element can only feed one
-// Web Audio graph, so content.js can't hook it then. This script runs in the page's
-// own JS world, listens to whatever reaches the speakers (after their EQ, limiter
-// and crossfade) and hands the bars to content.js. Band math is the same as there.
+// YoutubeWatchr: the part that has to run in the page's own JS world.
+// 1. Song clock: YT Music's player (#movie_player) knows the position within the
+//    current song, also with gapless playback and crossfades of other extensions.
+//    Its methods only exist in the page's world, so content.js gets them from here.
+// 2. Spectrum for pages whose sound already runs through Web Audio: some YT Music
+//    extensions (e.g. Velvetone with its EQ and crossfade) route the <video> through
+//    their own AudioContext in the page. An element can only feed one Web Audio
+//    graph, so content.js can't hook it then. We listen to whatever reaches the
+//    speakers (after their EQ, limiter and crossfade) and hand the bars to
+//    content.js. Band math is the same as there.
+// Values go to content.js as JSON strings in CustomEvents: strings cross from the
+// page into the extension's world reliably, objects don't.
 (function () {
   'use strict';
   // Only for the page's own world (Firefox before 128 ignores "world": "MAIN").
-  if (window.__ytwPageAudio || (typeof chrome !== 'undefined' && chrome.runtime?.id)) return;
-  window.__ytwPageAudio = true;
+  if (window.__ytwPage || (typeof chrome !== 'undefined' && chrome.runtime?.id)) return;
+  window.__ytwPage = true;
+
+  // ---- song clock ----------------------------------------------------------
+  setInterval(() => {
+    const p = document.getElementById('movie_player');
+    if (typeof p?.getCurrentTime !== 'function') return;
+    try {
+      const position = +p.getCurrentTime(), duration = +p.getDuration();
+      if (!isFinite(position) || !(duration > 0)) return;
+      document.dispatchEvent(new CustomEvent('ytw:time', { detail: JSON.stringify({ position, duration }) }));
+    } catch { /* player not ready */ }
+  }, 250);
+
+  // ---- spectrum of the page's own Web Audio --------------------------------
 
   const BANDS = 32, BAND_FPS = 30;
   const MIN_HZ = 40, MAX_HZ = 16000;
@@ -97,7 +116,6 @@
     const quiet = bands.every(b => b === 0);
     if (quiet && silent) return;
     silent = quiet;
-    // A string crosses from the page into the extension's world reliably; objects don't.
     document.dispatchEvent(new CustomEvent('ytw:bands', { detail: JSON.stringify(bands) }));
   }, 1000 / BAND_FPS);
 })();

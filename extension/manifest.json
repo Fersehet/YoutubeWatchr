@@ -25,7 +25,7 @@
         "https://music.youtube.com/*"
       ],
       "js": [
-        "page-audio.js"
+        "page-bridge.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"
