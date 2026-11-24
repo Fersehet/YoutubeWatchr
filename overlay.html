@@ -620,7 +620,10 @@
   /* compact: a slim bar. Thick accent ring with a dim rest, dividers, title in the accent */
   body.compact.wow { --cfs: 18px; }
   body.compact.wow #card { border-radius: 999px; padding: 8px 26px 8px 8px; gap: 14px; background: rgba(18,20,26,.74); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
-  body.compact.wow #card::before, body.compact.wow #card::after { display: none; }
+  body.compact.wow #card::after { display: none; }
+  /* the same golden glow as on the big card, sized for the pill */
+  body.compact.wow #card::before { border-radius: inherit;
+    -webkit-mask-image: radial-gradient(240px 90px at 100% 0%, #000, transparent 72%); mask-image: radial-gradient(240px 90px at 100% 0%, #000, transparent 72%); }
   body.compact.wow #art-wrap { width: 44px; height: 44px; margin: 0; box-shadow: none; }
   body.compact.wow:not(.no-progress) #art-wrap { background: conic-gradient(var(--accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--accent) 32%, #3a3e48) 0); }
   body.compact.wow:not(.no-progress) #art-wrap img { inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); }
@@ -696,6 +699,11 @@
   body.custom-radius #card { border-radius: var(--custom-radius) !important; clip-path: none !important; }
   body.custom-font #card, body.custom-font #card * { font-family: var(--custom-font) !important; }
   body.no-label #label, body.no-cover #art-wrap, body.no-eq #eq { display: none !important; }
+  /* Without the cover the card keeps the height it has with one, so the equalizer (which
+     fills the space under the text in most themes) doesn't shrink to nothing. Hiding the
+     equalizer is its own option (eq=0). */
+  body.no-cover:not(.compact):not(.no-eq) #info { min-height: var(--no-cover-h, 128px); }
+  body.no-cover.macos:not(.compact) #info { --no-cover-h: 120px; }
   body.no-eq.truedamage #bar { visibility: visible; }
   body.no-eq:not(.faceit):not(.compact) #progress { margin-top: auto; }
   body.no-eq.faceit #artist { grid-column: 2 / 4; }
@@ -1038,6 +1046,23 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
+
+// Big card: with some themes and fonts the text next to the cover runs taller than the
+// cover's base size. Then the cover grows to the same height, and stays square
+// (CSS aspect-ratio can't follow a stretched height in a flex row, so it's set here).
+function fitCover() {
+  const art = $('art-wrap'), b = document.body.classList;
+  art.style.width = art.style.height = '';
+  if (b.contains('compact') || b.contains('vinyl') || b.contains('faceit') || !opt.cover) return;
+  const cs = getComputedStyle(art);
+  const want = $('info').offsetHeight - parseFloat(cs.marginTop) - parseFloat(cs.marginBottom);
+  if (want > art.offsetHeight + .5) art.style.width = art.style.height = want + 'px';
+}
+let fitQueued = 0;
+new ResizeObserver(() => {
+  if (fitQueued) return;
+  fitQueued = requestAnimationFrame(() => { fitQueued = 0; fitCover(); });
+}).observe($('info'));
 
 // True Damage: bars up to the playhead glow magenta to cyan, the rest stay
 // dim, over a red-to-gold progress line with a round marker.
