@@ -65,14 +65,18 @@
       const p = (typeof unsafeWindow !== 'undefined' ? unsafeWindow : window).document.getElementById('movie_player');
       if (typeof p?.getCurrentTime !== 'function') return null;
       const position = +p.getCurrentTime(), duration = +p.getDuration();
-      return isFinite(position) && duration > 0 ? { position: Math.min(duration, position), duration } : null;
+      if (!isFinite(position) || !(duration > 0)) return null;
+      // right after a song change the player can still report the last song for a moment
+      const vid = p.getVideoData?.()?.video_id, id = new URLSearchParams(location.search).get('v');
+      if (vid && id && vid !== id) return null;
+      return { position: Math.min(duration, position), duration };
     } catch { return null; }
   }
   function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
+    if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
     const clock = playerClock();
     if (clock) return clock;
-    if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
     if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
     const bar = $('ytmusic-player-bar');
     const slider = bar?.querySelector('#progress-bar');

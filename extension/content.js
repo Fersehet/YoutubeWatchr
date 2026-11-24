@@ -47,13 +47,20 @@
   });
   let offset = 0, offsetTitle = '';
   const secs = s => s ? s.trim().split(':').reduce((a, b) => a * 60 + +b, 0) : NaN;
+  // The clock must belong to the song on screen (right after a change it can
+  // still be the last one's for a moment).
+  function sameSong(c, title) {
+    const id = new URLSearchParams(location.search).get('v');
+    if (id && c.id) return c.id === id;
+    return !c.title || !title || c.title === title;
+  }
   function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
-    if (clock && Date.now() - clock.at < 1500) {
+    if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
+    if (clock && Date.now() - clock.at < 1500 && sameSong(clock, title)) {
       const run = v.paused ? 0 : (Date.now() - clock.at) / 1000;
       return { position: Math.min(clock.duration, clock.position + run), duration: clock.duration };
     }
-    if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
     if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
     const bar = $('ytmusic-player-bar');
     const slider = bar?.querySelector('#progress-bar');

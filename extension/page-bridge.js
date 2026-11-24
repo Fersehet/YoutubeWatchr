@@ -23,7 +23,9 @@
     try {
       const position = +p.getCurrentTime(), duration = +p.getDuration();
       if (!isFinite(position) || !(duration > 0)) return;
-      document.dispatchEvent(new CustomEvent('ytw:time', { detail: JSON.stringify({ position, duration }) }));
+      const data = p.getVideoData?.() || {};
+      // id and title let content.js drop a reading that still belongs to the last song
+      document.dispatchEvent(new CustomEvent('ytw:time', { detail: JSON.stringify({ position, duration, id: data.video_id || '', title: data.title || '' }) }));
     } catch { /* player not ready */ }
   }, 250);
 
