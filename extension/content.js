@@ -2,6 +2,8 @@
 // music.youtube.com. background.js sends them to your YoutubeWatchr server, or
 // broadcasts them through OBS WebSocket (OBS 28+) for overlay.html?obs=1. Track and spectrum
 // code is the same as in yt-music-now-playing.user.js; only the transport differs.
+// page-bridge.js (page world) supplies YT Music's own song clock, and the spectrum
+// when another extension owns the page audio.
 (function () {
   'use strict';
 
@@ -37,11 +39,28 @@
   // songs. So the song time starts over whenever the title changes, and the
   // player bar (its slider or the "1:23 / 3:45" text) corrects it whenever
   // the video clock drifts more than 1.5 s from what YT Music shows.
+  // Preferred: YT Music's own player clock from page-bridge.js. It starts at 0 for
+  // every song by itself; the calculation below is only the fallback.
+  let clock = null;
+  document.addEventListener('ytw:time', e => {
+    try { const c = JSON.parse(e.detail); if (c.duration > 0) clock = { ...c, at: Date.now() }; } catch { /* ignore */ }
+  });
   let offset = 0, offsetTitle = '';
   const secs = s => s ? s.trim().split(':').reduce((a, b) => a * 60 + +b, 0) : NaN;
+  // The clock must belong to the song on screen (right after a change it can
+  // still be the last one's for a moment).
+  function sameSong(c, title) {
+    const id = new URLSearchParams(location.search).get('v');
+    if (id && c.id) return c.id === id;
+    return !c.title || !title || c.title === title;
+  }
   function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
     if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
+    if (clock && Date.now() - clock.at < 1500 && sameSong(clock, title)) {
+      const run = v.paused ? 0 : (Date.now() - clock.at) / 1000;
+      return { position: Math.min(clock.duration, clock.position + run), duration: clock.duration };
+    }
     if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
     const bar = $('ytmusic-player-bar');
     const slider = bar?.querySelector('#progress-bar');
@@ -114,9 +133,35 @@
     }
   }
 
+  // Another extension (e.g. Velvetone: EQ, crossfade) already plays the <video>
+  // through its own Web Audio graph. An element can feed only one graph, so we
+  // must not grab it (that would break the other extension or fail ourselves);
+  // page-bridge.js taps that graph instead and sends us the bars.
+  // Velvetone only builds its graph when one of its sound features is on, and only
+  // after a click; its CSS variable is there either way. So when it is installed we
+  // wait a moment after the click and hook only if it hasn't taken the <video>.
+  let pageBandsAt = 0, waitUntil = 0, waiting = false;
+  const pageAudio = () => document.documentElement.hasAttribute('data-ytw-page-audio') || Date.now() - pageBandsAt < 2000;
+  const velvetone = () => !!window.getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  document.addEventListener('ytw:bands', e => {
+    let bands;
+    try { bands = JSON.parse(e.detail); } catch { return; }
+    if (!Array.isArray(bands) || bands.length !== BANDS) return;
+    pageBandsAt = Date.now();
+    send({ bands });
+  });
+
   function hook() {
     const v = video();
-    if (!v || v === hookedEl) return;
+    if (!v || v === hookedEl || pageAudio() || waiting) return;
+    if (velvetone()) {
+      if (!waitUntil) waitUntil = Date.now() + 1500;
+      if (Date.now() < waitUntil) {
+        waiting = true;
+        setTimeout(() => { waiting = false; hook(); }, waitUntil - Date.now() + 50);
+        return;
+      }
+    }
     try {
       if (!ctx) {
         ctx = new AudioContext();
@@ -145,7 +190,7 @@
   let sentSilence = false;
   setInterval(() => {
     const v = video();
-    if (!analyser || !v || hookedEl !== v) return;
+    if (!analyser || !v || hookedEl !== v || Date.now() - pageBandsAt < 2000) return;
     if (ctx.state !== 'running') { ctx.resume(); return; }
     if (v.paused) {
       if (!sentSilence) { send({ bands: new Array(BANDS).fill(0) }); sentSilence = true; }

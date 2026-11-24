@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YT Music → OBS Now Playing
 // @namespace    yt-music-obs
-// @version      1.1.3
+// @version      1.1.4
 // @description  Sends the current YouTube Music track and a live audio spectrum to your YoutubeWatchr server.
 // @match        https://music.youtube.com/*
 // @grant        GM_xmlhttpRequest
@@ -57,9 +57,26 @@
   // the video clock drifts more than 1.5 s from what YT Music shows.
   let offset = 0, offsetTitle = '';
   const secs = s => s ? s.trim().split(':').reduce((a, b) => a * 60 + +b, 0) : NaN;
+  // Preferred: YT Music's own player clock. It starts at 0 for every song by
+  // itself, also with gapless playback and crossfades; the calculation below is
+  // only the fallback.
+  function playerClock() {
+    try {
+      const p = (typeof unsafeWindow !== 'undefined' ? unsafeWindow : window).document.getElementById('movie_player');
+      if (typeof p?.getCurrentTime !== 'function') return null;
+      const position = +p.getCurrentTime(), duration = +p.getDuration();
+      if (!isFinite(position) || !(duration > 0)) return null;
+      // right after a song change the player can still report the last song for a moment
+      const vid = p.getVideoData?.()?.video_id, id = new URLSearchParams(location.search).get('v');
+      if (vid && id && vid !== id) return null;
+      return { position: Math.min(duration, position), duration };
+    } catch { return null; }
+  }
   function songTime(v, title) {
     if (!v) return { position: 0, duration: 0 };
     if (title && title !== offsetTitle) { if (offsetTitle) offset = v.currentTime; offsetTitle = title; }
+    const clock = playerClock();
+    if (clock) return clock;
     if (v.currentTime < offset) offset = 0; // a new song in a fresh <video>
     const bar = $('ytmusic-player-bar');
     const slider = bar?.querySelector('#progress-bar');
@@ -132,9 +149,52 @@
     }
   }
 
+  // Another extension (e.g. Velvetone: EQ, crossfade) already plays the <video>
+  // through its own Web Audio graph. An element can feed only one graph, so we
+  // must not grab it; we listen to that graph's output (after its EQ and
+  // crossfade) instead.
+  const PAGE = typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+  // Velvetone only builds its graph when one of its sound features is on, and only
+  // after a click; its CSS variable is there either way. So when it is installed we
+  // wait a moment after the click and hook only if it hasn't taken the <video>.
+  const foreignAudio = () => !!PAGE.__bytmAudio;
+  const velvetone = () => !!getComputedStyle(document.documentElement).getPropertyValue('--bytm-accent').trim();
+  let waitUntil = 0, waiting = false;
+  let pageOut = null;
+  function hookPage() {
+    const b = PAGE.__bytmAudio;
+    if (!b?.limiter || b.ctx?.state === 'closed') return false;
+    if (pageOut === b.limiter) return true;
+    try {
+      ctx = b.ctx;
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 4096;
+      analyser.smoothingTimeConstant = 0.4;
+      b.limiter.connect(analyser); // a side branch: the speakers keep their own connection
+      freq = new Float32Array(analyser.frequencyBinCount);
+      buildBands(ctx.sampleRate, analyser.fftSize);
+      pageOut = b.limiter;
+      hookedEl = null;
+      console.log('[YoutubeWatchr] spectrum taps the page audio');
+      return true;
+    } catch (e) {
+      console.warn('[YoutubeWatchr] could not tap the page audio', e);
+      return false;
+    }
+  }
+  setInterval(() => { if (foreignAudio()) hookPage(); }, 1000);
+
   function hook() {
     const v = video();
-    if (!v || v === hookedEl) return;
+    if (!v || v === hookedEl || foreignAudio() || pageOut || waiting) return;
+    if (velvetone()) {
+      if (!waitUntil) waitUntil = Date.now() + 1500;
+      if (Date.now() < waitUntil) {
+        waiting = true;
+        setTimeout(() => { waiting = false; hook(); }, waitUntil - Date.now() + 50);
+        return;
+      }
+    }
     try {
       if (!ctx) {
         ctx = new AudioContext();
@@ -156,15 +216,15 @@
 
   function onGesture() {
     hook();
-    if (ctx && ctx.state !== 'running') ctx.resume();
+    if (ctx && !pageOut && ctx.state !== 'running') ctx.resume();
   }
   ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, onGesture, true));
 
   let sentSilence = false;
   setInterval(() => {
     const v = video();
-    if (!analyser || !v || hookedEl !== v) return;
-    if (ctx.state !== 'running') { ctx.resume(); return; }
+    if (!analyser || !v || (hookedEl !== v && !pageOut)) return;
+    if (ctx.state !== 'running') { if (!pageOut) ctx.resume(); return; }
     if (v.paused) {
       if (!sentSilence) { send({ bands: new Array(BANDS).fill(0) }); sentSilence = true; }
       return;
@@ -191,7 +251,7 @@
     v.__ytObs = true;
     ['play', 'pause', 'ended', 'loadedmetadata', 'seeked'].forEach(ev =>
       v.addEventListener(ev, () => pushTrack(true)));
-    v.addEventListener('play', () => { if (ctx && ctx.state !== 'running') ctx.resume(); });
+    v.addEventListener('play', () => { if (ctx && !pageOut && ctx.state !== 'running') ctx.resume(); });
   }
   let pending = 0;
   new MutationObserver(() => {
