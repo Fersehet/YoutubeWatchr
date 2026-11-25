@@ -61,7 +61,7 @@ You need a server with **[Docker](https://docs.docker.com/engine/install/)** (or
    - **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and pick `extension/manifest.json`. Firefox removes it again when it closes.
 
 5. **Connect the extension.** Click the YoutubeWatchr icon in the browser toolbar, choose **Server** and copy the **Server address** and the **Extension key** from the editor (under **Connection**) into it.
-6. **Add it to OBS.** In the editor, click **Copy URL** (it looks like `https://ytw.example.com/overlay/AbC123…`). In OBS click **+** under Sources, choose **Browser**, paste the URL, set the width and height the editor shows (`620` × `200` by default) and delete the text in **Custom CSS**.
+6. **Add it to OBS.** In the editor, click **Copy URL** (it looks like `https://ytw.example.com/overlay/AbC123…`). In OBS click **+** under Sources, choose **Browser**, paste the URL, set the width and height the editor shows (`620` × `200` for most themes) and delete the text in **Custom CSS**.
 7. **Play music.** Open [music.youtube.com](https://music.youtube.com) (reload it if it was already open), start a song and **click once anywhere on the page**. The extension shows **Connected to the server** and the editor shows **Music is coming in**.
 
 The click is needed because browsers only allow reading the audio after you interact with the page. Until then the equalizer plays a made-up animation.
@@ -100,7 +100,7 @@ You need **[Node.js](https://nodejs.org)** (version 18 or newer).
 
      > Chrome only: open the Tampermonkey extension details (`chrome://extensions`) and turn on **Allow User Scripts**, otherwise the script won't run.
 
-3. **Add it to OBS.** Click **+** under Sources and choose **Browser**. URL: `http://127.0.0.1:8974/`, width `620`, height `200`. Delete the text in **Custom CSS**.
+3. **Add it to OBS.** Click **+** under Sources and choose **Browser**. URL: `http://127.0.0.1:8974/`, width `620` (`660` for `rocket`), height `200`. Delete the text in **Custom CSS**.
 4. **Play music** as in step 7 above.
 
 ## Customize it
@@ -133,6 +133,8 @@ Every theme also has a **compact** version, a slim one-line bar where the progre
 
 Most themes take their colors from the album cover. The game, racing and `pinkribbon` themes use their own colors, so their card looks the same with every cover. `pinkribbon` is a light pink card with the pink ribbon of breast cancer awareness. In `iracing` the equalizer looks like the shift lights of a sim-racing wheel: green, yellow, red and blue LEDs. `macos` is a dark macOS window with the three window buttons in the title bar. `wow` is a dark card with a yellow ring around the cover and a yellow progress bar. `rocket` looks like a Rocket League HUD: the equalizer is split into the two teams, blue on the left and orange on the right with a grey bar in the middle, and the progress fills up like the boost meter. In the compact version the boost meter runs around the cover.
 
+The cover is always square. If the text next to it runs taller, as with some theme fonts, the cover grows with it.
+
 ## All options
 
 The editor writes these for you. If you prefer, add them to the OBS URL yourself, starting with `?` and joined with `&`, for example `http://127.0.0.1:8974/?theme=vinyl&compact=1`. On the online server, options in the URL replace the ones saved in the editor.
@@ -143,9 +145,10 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 |---|---|---|
 | `theme` | `?theme=vinyl` | `classic` (default), `glass`, `vinyl`, `retro`, `truedamage`, `lol`, `cs`, `faceit`, `iracing`, `f1`, `pinkribbon`, `macos`, `wow` or `rocket` |
 | `compact` | `?compact=1` | Slim one-line version |
-| `width` | `?compact=1&width=380` | Width of the compact bar in pixels (default 460). Long names scroll inside |
+| `width` | `?width=700` | Width of the card in pixels: the big card (default 560, `faceit` 420) or, with `compact=1`, the compact bar (default 460). Long names scroll inside. Make the OBS width bigger by the same amount |
 | `scale` | `?scale=1.5` | Make everything bigger or smaller (0.3 to 3). Multiply the OBS width and height by the same number |
-| `card` | `?card=0` | No background, just the content |
+| `card` | `?card=0` | No background and no shadow, just the content. Frames around the cover stay |
+| `shadow` | `?card=0&shadow=1` | Keep the soft shadow under the cover when the card is off |
 | `still` | `?still=1` | No animations: no equalizer, no scrolling text, no spinning record |
 
 **Colors and text**
@@ -165,7 +168,7 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 
 | Option | Example | What it does |
 |---|---|---|
-| `album`, `cover`, `eq`, `progress` | `?album=0` | Set to `0` to hide the album name, cover, equalizer or progress bar |
+| `album`, `cover`, `eq`, `progress` | `?album=0` | Set to `0` to hide the album name, cover, equalizer or progress bar. Each one on its own: without the cover the equalizer stays as tall as before |
 | `bars` | `?bars=24` | Number of equalizer bars (default 32) |
 | `hidePaused` | `?hidePaused=1` | Hide the overlay while the music is paused |
 | `demo` | `?demo=1` | Show demo songs instead of your music, for testing |
