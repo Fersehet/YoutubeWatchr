@@ -723,11 +723,11 @@
   body.no-card #info::after, body.no-card #frost, body.no-card #glow { display: none; }
   body.no-card #info { background: transparent; box-shadow: none; }
   /* The soft shadow under the cover (and the record) gives depth on the card; without the
-     card it sat as a grey smudge on the stream. Theme frames and rings stay. */
-  body.no-card:not(.retro):not(.lol):not(.cs):not(.faceit):not(.wow):not(.rocket) #art-wrap { box-shadow: none; }
-  body.no-card.glass #art-wrap { box-shadow: 0 0 0 .5px rgba(255,255,255,.35); }
-  body.no-card.iracing #art-wrap { box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
-  body.no-card.vinyl:not(.truedamage) #vinyl { box-shadow: none; }
+     card it sat as a grey smudge on the stream. Theme frames and rings stay. shadow=1 keeps it. */
+  body.no-card:not(.keep-shadow):not(.retro):not(.lol):not(.cs):not(.faceit):not(.wow):not(.rocket) #art-wrap { box-shadow: none; }
+  body.no-card.glass:not(.keep-shadow) #art-wrap { box-shadow: 0 0 0 .5px rgba(255,255,255,.35); }
+  body.no-card.iracing:not(.keep-shadow) #art-wrap { box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+  body.no-card.vinyl:not(.truedamage):not(.keep-shadow) #vinyl { box-shadow: none; }
   body.no-card #title, body.no-card #artist, body.no-card #label, body.no-card #progress {
     text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.5);
   }
@@ -780,6 +780,7 @@ const opt = {
   embed: q.get('embed') === '1',      // no connection: the page that embeds the overlay sends the music (used by the website)
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
+  shadow: q.get('shadow') === '1',    // with card=0: keep the soft shadow under the cover
   progress: q.get('progress') !== '0',
   scale: Math.min(3, Math.max(.3, +q.get('scale') || 1)), // overall size, 1 = default
   width: +q.get('width') || 0,         // card width in px: compact pill (default 460) or big card (default 560, FACEIT 420)
@@ -803,6 +804,7 @@ if (FONTS[opt.theme]) {
 const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit: ['#ff5500', '#ff5500'], truedamage: ['#2bf0c8', '#b026ff'], iracing: ['#1e6bff', '#22d34b'], f1: ['#e10600', '#ff5a4f'], pinkribbon: ['#e0457b', '#f7a1c0'], wow: ['#ffd100', '#ffd100'], rocket: ['#1f8fff', '#ff8a1f'] }[opt.theme];
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
+document.body.classList.toggle('keep-shadow', opt.shadow);
 document.body.classList.toggle('no-progress', !opt.progress);
 if (opt.scale !== 1) { document.body.style.transformOrigin = '0 0'; document.body.style.transform = `scale(${opt.scale})`; }
 if (opt.width) document.body.style.setProperty(opt.compact ? '--cw' : '--bw', Math.max(opt.compact ? 240 : 360, opt.width) + 'px');

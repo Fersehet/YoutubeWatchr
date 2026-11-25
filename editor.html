@@ -265,6 +265,9 @@
         <div class="row"><span data-i18n="background">Background</span>
           <div class="inline"><label class="check"><input type="checkbox" id="card" checked> <span data-i18n="showCard">Show card</span></label></div>
         </div>
+        <div class="row" id="shadow-row"><span data-i18n="shadow">Shadow</span>
+          <div class="inline"><label class="check"><input type="checkbox" id="shadow"> <span data-i18n="shadowNoCard">Shadow under the cover without the card</span></label></div>
+        </div>
         <div class="row" id="bg-row"><span data-i18n="cardColor">Card color</span>
           <div class="inline"><label class="check"><input type="checkbox" id="bgOn"> <span data-i18n="custom">Custom</span></label><input type="color" id="bg" value="#101218" aria-label="Card color" data-i18n-aria="cardColor"></div>
         </div>
@@ -344,7 +347,7 @@ const T = {
     theme: 'Theme', layout: 'Layout', style: 'Style', card: 'Card', compact: 'Compact', still: 'No animations', pillWidth: 'Width', size: 'Size',
     colors: 'Colors', accent: 'Accent', accentAria: 'Accent source', fromCover: 'From cover', custom: 'Custom',
     brandNote: 'This theme uses its own colors unless you pick custom ones.',
-    mainColor: 'Main color', secondColor: 'Second color', titleColor: 'Title color', background: 'Background', showCard: 'Show card',
+    mainColor: 'Main color', secondColor: 'Second color', titleColor: 'Title color', background: 'Background', showCard: 'Show card', shadow: 'Shadow', shadowNoCard: 'Shadow under the cover without the card',
     cardColor: 'Card color', cardOpacity: 'Card opacity', corners: 'Corners',
     text: 'Text', label: 'Label', showLabelAria: 'Show label', labelTextAria: 'Label text', font: 'Font', themeDefault: 'Theme default',
     show: 'Show', album: 'Album', cover: 'Cover',
@@ -377,7 +380,7 @@ const T = {
     theme: 'Design', layout: 'Layout', style: 'Stil', card: 'Karte', compact: 'Kompakt', still: 'Keine Animationen', pillWidth: 'Breite', size: 'Größe',
     colors: 'Farben', accent: 'Akzent', accentAria: 'Woher die Akzentfarbe kommt', fromCover: 'Vom Cover', custom: 'Eigene',
     brandNote: 'Dieses Design nutzt seine eigenen Farben, außer du wählst eigene.',
-    mainColor: 'Hauptfarbe', secondColor: 'Zweite Farbe', titleColor: 'Titelfarbe', background: 'Hintergrund', showCard: 'Karte zeigen',
+    mainColor: 'Hauptfarbe', secondColor: 'Zweite Farbe', titleColor: 'Titelfarbe', background: 'Hintergrund', showCard: 'Karte zeigen', shadow: 'Schatten', shadowNoCard: 'Schatten unter dem Cover ohne Karte',
     cardColor: 'Kartenfarbe', cardOpacity: 'Deckkraft der Karte', corners: 'Ecken',
     text: 'Text', label: 'Beschriftung', showLabelAria: 'Beschriftung zeigen', labelTextAria: 'Text der Beschriftung', font: 'Schrift', themeDefault: 'Wie im Design',
     show: 'Zeigen', album: 'Album', cover: 'Cover',
@@ -410,7 +413,7 @@ const T = {
     theme: 'Дизайн', layout: 'Макет', style: 'Вид', card: 'Карточка', compact: 'Компактный', still: 'Без анимаций', pillWidth: 'Ширина', size: 'Размер',
     colors: 'Цвета', accent: 'Акцент', accentAria: 'Откуда берётся акцентный цвет', fromCover: 'Из обложки', custom: 'Свой',
     brandNote: 'У этого дизайна свои цвета, пока ты не выберешь другие.',
-    mainColor: 'Основной цвет', secondColor: 'Второй цвет', titleColor: 'Цвет названия', background: 'Фон', showCard: 'Показывать карточку',
+    mainColor: 'Основной цвет', secondColor: 'Второй цвет', titleColor: 'Цвет названия', background: 'Фон', showCard: 'Показывать карточку', shadow: 'Тень', shadowNoCard: 'Тень под обложкой без карточки',
     cardColor: 'Цвет карточки', cardOpacity: 'Непрозрачность карточки', corners: 'Углы',
     text: 'Текст', label: 'Подпись', showLabelAria: 'Показывать подпись', labelTextAria: 'Текст подписи', font: 'Шрифт', themeDefault: 'Как в дизайне',
     show: 'Показывать', album: 'Альбом', cover: 'Обложка',
@@ -443,7 +446,7 @@ const T = {
     theme: 'Design', layout: 'Disposition', style: 'Style', card: 'Carte', compact: 'Compact', still: 'Sans animations', pillWidth: 'Largeur', size: 'Taille',
     colors: 'Couleurs', accent: 'Accent', accentAria: 'Origine de la couleur d\'accent', fromCover: 'De la pochette', custom: 'Perso',
     brandNote: 'Ce design utilise ses propres couleurs, sauf si tu en choisis d\'autres.',
-    mainColor: 'Couleur principale', secondColor: 'Deuxième couleur', titleColor: 'Couleur du titre', background: 'Fond', showCard: 'Afficher la carte',
+    mainColor: 'Couleur principale', secondColor: 'Deuxième couleur', titleColor: 'Couleur du titre', background: 'Fond', showCard: 'Afficher la carte', shadow: 'Ombre', shadowNoCard: 'Ombre sous la pochette sans la carte',
     cardColor: 'Couleur de la carte', cardOpacity: 'Opacité de la carte', corners: 'Coins',
     text: 'Texte', label: 'Étiquette', showLabelAria: 'Afficher l\'étiquette', labelTextAria: 'Texte de l\'étiquette', font: 'Police', themeDefault: 'Celle du design',
     show: 'Afficher', album: 'Album', cover: 'Pochette',
@@ -485,7 +488,7 @@ const BRAND_THEMES = ['lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pin
 const DEFAULTS = {
   theme: 'classic', compact: false, still: false, width: 460, cardWidth: 0, scale: 1, // cardWidth 0 = the theme's own width
   accentMode: 'auto', accent: '#ff3d6e', accent2: '#ffb000',
-  textOn: false, text: '#ffffff', card: true, bgOn: false, bg: '#101218', bgAlpha: .8, radiusOn: false, radius: 14,
+  textOn: false, text: '#ffffff', card: true, shadow: false, bgOn: false, bg: '#101218', bgAlpha: .8, radiusOn: false, radius: 14,
   showLabel: true, label: 'Now Playing', font: '', album: true, cover: true,
   eq: true, bars: 32, progress: true, hidePaused: false,
   demo: true, checker: false,
@@ -549,6 +552,7 @@ function params(forObs, s = state) {
   if (s.accentMode === 'custom') { p.set('accent', h(s.accent)); p.set('accent2', h(s.accent2)); }
   if (s.textOn) p.set('text', h(s.text));
   if (!s.card) p.set('card', '0');
+  if (!s.card && s.shadow) p.set('shadow', '1');
   if (s.card && s.bgOn) { p.set('bg', h(s.bg)); p.set('bgAlpha', s.bgAlpha); }
   if (s.radiusOn) p.set('radius', s.radius);
   if (!s.showLabel) p.set('showLabel', '0');
@@ -645,7 +649,7 @@ document.querySelectorAll('[data-conn]').forEach(b => b.onclick = () => { state.
 $('obsPort').oninput = e => { state.obsPort = Math.min(65535, Math.max(1, +e.target.value || 4455)); render(); };
 $('obsPw').oninput = e => { state.obsPw = e.target.value; render(); };
 
-const checks = ['still', 'textOn', 'card', 'bgOn', 'radiusOn', 'showLabel', 'album', 'cover', 'eq', 'progress', 'hidePaused', 'demo', 'checker'];
+const checks = ['still', 'textOn', 'card', 'shadow', 'bgOn', 'radiusOn', 'showLabel', 'album', 'cover', 'eq', 'progress', 'hidePaused', 'demo', 'checker'];
 checks.forEach(id => $(id).onchange = e => { state[id] = e.target.checked; render(); });
 ['accent', 'accent2', 'text', 'bg'].forEach(id => $(id).oninput = e => { state[id] = e.target.value; render(); });
 $('accent').addEventListener('input', () => { state.accentMode = 'custom'; });
@@ -684,6 +688,7 @@ function syncControls() {
   $('accent-row').classList.toggle('disabled', s.accentMode !== 'custom');
   $('brand-note').hidden = !(BRAND_THEMES.includes(s.theme) && s.accentMode === 'auto');
   $('bg-row').classList.toggle('disabled', !s.card);
+  $('shadow-row').classList.toggle('disabled', s.card);
   $('bga-row').classList.toggle('disabled', !s.card || !s.bgOn);
   $('text').disabled = !s.textOn;
   $('radius').disabled = !s.radiusOn;
