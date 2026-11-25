@@ -624,7 +624,8 @@ function save() {
 function fit() {
   const [w, h] = obsSize();
   ov.style.width = w + 'px'; ov.style.height = h + 'px';
-  ov.style.transform = 'scale(' + Math.min(1, stage.clientWidth * .64 / 620) + ')';
+  // same size as before for a normal card; a wider one is scaled down so it still fits the scene
+  ov.style.transform = 'scale(' + Math.min(1, stage.clientWidth * .64 / 620, stage.clientWidth * .92 / w) + ')';
 }
 
 // ---- controls ------------------------------------------------------------------
@@ -655,7 +656,11 @@ checks.forEach(id => $(id).onchange = e => { state[id] = e.target.checked; rende
 $('accent').addEventListener('input', () => { state.accentMode = 'custom'; });
 ['scale', 'bgAlpha', 'radius', 'bars'].forEach(id => $(id).oninput = e => { state[id] = +e.target.value; render(); });
 // One width slider for both versions; each remembers its own value
-$('width').oninput = e => { state[state.compact ? 'width' : 'cardWidth'] = +e.target.value; render(); };
+$('width').oninput = e => {
+  const v = +e.target.value;
+  if (state.compact) state.width = v; else state.cardWidth = v === bigWidth() ? 0 : v; // back on the theme's width: no width in the URL
+  render();
+};
 $('label').oninput = e => { state.label = e.target.value; render(); };
 $('font').onchange = e => { state.font = e.target.value; render(); };
 
