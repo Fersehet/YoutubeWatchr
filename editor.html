@@ -239,7 +239,7 @@
             <label class="check" style="white-space: nowrap"><input type="checkbox" id="still"> <span data-i18n="still">No animations</span></label>
           </div>
         </div>
-        <div class="row" id="width-row"><span data-i18n="pillWidth">Pill width</span>
+        <div class="row" id="width-row"><span data-i18n="pillWidth">Width</span>
           <div class="inline"><input type="range" id="width" min="260" max="700" step="10" value="460"><output id="width-out">460</output></div>
         </div>
         <div class="row"><span data-i18n="size">Size</span>
@@ -341,7 +341,7 @@ const T = {
     localNote: 'The extension or the userscript sends the music to the YoutubeWatchr server on this computer (<code>http://127.0.0.1:8974</code>).',
     obsPort: 'OBS port', obsPortAria: 'OBS WebSocket port', password: 'Password', obsPwAria: 'OBS WebSocket password', pwPh: 'Empty if authentication is off',
     obsNote: 'No server: the extension sends the music straight to OBS. Use the same port and password as in the extension. In OBS: Tools → WebSocket Server Settings.',
-    theme: 'Theme', layout: 'Layout', style: 'Style', card: 'Card', compact: 'Compact', still: 'No animations', pillWidth: 'Pill width', size: 'Size',
+    theme: 'Theme', layout: 'Layout', style: 'Style', card: 'Card', compact: 'Compact', still: 'No animations', pillWidth: 'Width', size: 'Size',
     colors: 'Colors', accent: 'Accent', accentAria: 'Accent source', fromCover: 'From cover', custom: 'Custom',
     brandNote: 'This theme uses its own colors unless you pick custom ones.',
     mainColor: 'Main color', secondColor: 'Second color', titleColor: 'Title color', background: 'Background', showCard: 'Show card',
@@ -483,7 +483,7 @@ const THEMES = [
 ];
 const BRAND_THEMES = ['lol', 'cs', 'faceit', 'truedamage', 'iracing', 'f1', 'pinkribbon', 'wow', 'rocket'];
 const DEFAULTS = {
-  theme: 'classic', compact: false, still: false, width: 460, scale: 1,
+  theme: 'classic', compact: false, still: false, width: 460, cardWidth: 0, scale: 1, // cardWidth 0 = the theme's own width
   accentMode: 'auto', accent: '#ff3d6e', accent2: '#ffb000',
   textOn: false, text: '#ffffff', card: true, bgOn: false, bg: '#101218', bgAlpha: .8, radiusOn: false, radius: 14,
   showLabel: true, label: 'Now Playing', font: '', album: true, cover: true,
@@ -543,6 +543,7 @@ function params(forObs, s = state) {
   const h = v => v.replace('#', '');
   if (s.theme !== 'classic') p.set('theme', s.theme);
   if (s.compact) { p.set('compact', '1'); if (s.width !== 460) p.set('width', s.width); }
+  else if (s.cardWidth) p.set('width', s.cardWidth);
   if (s.still) p.set('still', '1');
   if (s.scale !== 1) p.set('scale', s.scale);
   if (s.accentMode === 'custom') { p.set('accent', h(s.accent)); p.set('accent2', h(s.accent2)); }
@@ -571,8 +572,12 @@ function params(forObs, s = state) {
   return str ? '?' + str : '';
 }
 
+// The big card's own width in each theme (overlay.html)
+const bigWidth = (s = state) => s.theme === 'faceit' ? 420 : 560;
+
 function obsSize() {
-  const w = state.compact ? state.width + 40 : state.theme === 'faceit' ? 460 : 620;
+  // card width + its side padding + the page margin (Rocket League has wider padding for its slanted end)
+  const w = state.compact ? state.width + 40 : (state.cardWidth || bigWidth()) + ({ faceit: 40, rocket: 100 }[state.theme] || 60);
   const h = state.compact ? 90 : 200;
   return [Math.ceil(w * state.scale), Math.ceil(h * state.scale)];
 }
@@ -644,7 +649,9 @@ const checks = ['still', 'textOn', 'card', 'bgOn', 'radiusOn', 'showLabel', 'alb
 checks.forEach(id => $(id).onchange = e => { state[id] = e.target.checked; render(); });
 ['accent', 'accent2', 'text', 'bg'].forEach(id => $(id).oninput = e => { state[id] = e.target.value; render(); });
 $('accent').addEventListener('input', () => { state.accentMode = 'custom'; });
-['width', 'scale', 'bgAlpha', 'radius', 'bars'].forEach(id => $(id).oninput = e => { state[id] = +e.target.value; render(); });
+['scale', 'bgAlpha', 'radius', 'bars'].forEach(id => $(id).oninput = e => { state[id] = +e.target.value; render(); });
+// One width slider for both versions; each remembers its own value
+$('width').oninput = e => { state[state.compact ? 'width' : 'cardWidth'] = +e.target.value; render(); };
 $('label').oninput = e => { state.label = e.target.value; render(); };
 $('font').onchange = e => { state.font = e.target.value; render(); };
 
@@ -663,15 +670,17 @@ function syncControls() {
   $('css-hint').innerHTML = t(s.conn === 'obs' && !SERVED ? 'hintObs' : 'hintCss');
   checks.forEach(id => { $(id).checked = s[id]; });
   ['accent', 'accent2', 'text', 'bg'].forEach(id => { if ($(id).value !== s[id]) $(id).value = s[id]; });
-  ['width', 'scale', 'bgAlpha', 'radius', 'bars'].forEach(id => { $(id).value = s[id]; });
+  ['scale', 'bgAlpha', 'radius', 'bars'].forEach(id => { $(id).value = s[id]; });
+  const wv = s.compact ? s.width : s.cardWidth || bigWidth(s);
+  Object.assign($('width'), s.compact ? { min: 260, max: 700 } : { min: 400, max: 1000 });
+  $('width').value = wv;
   if ($('label').value !== s.label) $('label').value = s.label;
   $('font').value = s.font;
-  $('width-out').textContent = s.width;
+  $('width-out').textContent = wv;
   $('scale-out').textContent = Math.round(s.scale * 100) + '%';
   $('bgAlpha-out').textContent = Math.round(s.bgAlpha * 100) + '%';
   $('radius-out').textContent = s.radius + 'px';
   $('bars-out').textContent = s.bars;
-  $('width-row').classList.toggle('disabled', !s.compact);
   $('accent-row').classList.toggle('disabled', s.accentMode !== 'custom');
   $('brand-note').hidden = !(BRAND_THEMES.includes(s.theme) && s.accentMode === 'auto');
   $('bg-row').classList.toggle('disabled', !s.card);

@@ -27,7 +27,7 @@
     position: relative;
     display: flex;
     gap: 18px;
-    width: 560px;
+    width: var(--bw, 560px);
     padding: 16px;
     border-radius: 18px;
     background: var(--card);
@@ -353,7 +353,7 @@
      #14161a at 85%, 12px radius, Geist. */
   body.faceit { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --bar-round: 4; --cap: rgba(255,255,255,0); --frost: 0; }
   body.faceit #card {
-    display: grid; width: 420px; box-sizing: border-box; padding: 16px;
+    display: grid; width: var(--bw, 420px); box-sizing: border-box; padding: 16px;
     grid-template-columns: 56px minmax(0, 1fr) 124px; grid-template-rows: 26px 30px auto;
     column-gap: 14px; row-gap: 0;
     border-radius: 12px; background: rgba(20,22,26,.85); box-shadow: none;
@@ -638,7 +638,7 @@
   body.rocket { font-family: "Geist", "Segoe UI", system-ui, sans-serif; --frost: 0; --bar-round: 1; --bar-glow: 0;
     --bar1: #1f8fff; --bar2: #ff8a1f; --cap: rgba(255,255,255,.75); font-variant-numeric: tabular-nums; }
   body.rocket #glow { display: none; }
-  body.rocket #card { width: 560px; border-radius: 0; gap: 18px; padding: 14px 48px 14px 22px;
+  body.rocket #card { width: var(--bw, 560px); border-radius: 0; gap: 18px; padding: 14px 48px 14px 22px;
     background: linear-gradient(100deg, rgba(8,15,30,.95), rgba(13,24,46,.9));
     clip-path: polygon(0 0, 100% 0, calc(100% - 26px) 100%, 0 100%); box-shadow: none; }
   body.rocket #card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: #1f8fff; }
@@ -722,6 +722,12 @@
   body.no-card #card::before, body.no-card #card::after,
   body.no-card #info::after, body.no-card #frost, body.no-card #glow { display: none; }
   body.no-card #info { background: transparent; box-shadow: none; }
+  /* The soft shadow under the cover (and the record) gives depth on the card; without the
+     card it sat as a grey smudge on the stream. Theme frames and rings stay. */
+  body.no-card:not(.retro):not(.lol):not(.cs):not(.faceit):not(.wow):not(.rocket) #art-wrap { box-shadow: none; }
+  body.no-card.glass #art-wrap { box-shadow: 0 0 0 .5px rgba(255,255,255,.35); }
+  body.no-card.iracing #art-wrap { box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
+  body.no-card.vinyl:not(.truedamage) #vinyl { box-shadow: none; }
   body.no-card #title, body.no-card #artist, body.no-card #label, body.no-card #progress {
     text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.5);
   }
@@ -776,7 +782,7 @@ const opt = {
   card: q.get('card') !== '0',        // card=0: no background, just content
   progress: q.get('progress') !== '0',
   scale: Math.min(3, Math.max(.3, +q.get('scale') || 1)), // overall size, 1 = default
-  width: +q.get('width') || 0,         // compact pill width in px (default 460)
+  width: +q.get('width') || 0,         // card width in px: compact pill (default 460) or big card (default 560, FACEIT 420)
   server: q.get('server') || '',      // only needed if the overlay is opened as a local file
   obs: q.get('obs') === '1',          // get the music from the browser extension through OBS WebSocket
   port: +q.get('port') || 4455,       // OBS WebSocket port
@@ -799,7 +805,7 @@ document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('no-progress', !opt.progress);
 if (opt.scale !== 1) { document.body.style.transformOrigin = '0 0'; document.body.style.transform = `scale(${opt.scale})`; }
-if (opt.width) document.body.style.setProperty('--cw', Math.max(240, opt.width) + 'px');
+if (opt.width) document.body.style.setProperty(opt.compact ? '--cw' : '--bw', Math.max(opt.compact ? 240 : 360, opt.width) + 'px');
 if (BRAND && !opt.accent) setAccent(...BRAND);
 const hex = v => '#' + String(v).replace('#', '');
 function rgba(h, a) {
@@ -1059,10 +1065,13 @@ function fitCover() {
   if (want > art.offsetHeight + .5) art.style.width = art.style.height = want + 'px';
 }
 let fitQueued = 0;
-new ResizeObserver(() => {
-  if (fitQueued) return;
-  fitQueued = requestAnimationFrame(() => { fitQueued = 0; fitCover(); });
-}).observe($('info'));
+const queueFit = () => { if (!fitQueued) fitQueued = requestAnimationFrame(() => { fitQueued = 0; fitCover(); }); };
+// Watch the text itself, not #info: once the cover has grown, #info is as tall as the
+// cover, so it wouldn't notice the text getting shorter again (e.g. after a font loads).
+const fitWatch = new ResizeObserver(queueFit);
+['label', 'title', 'artist', 'progress'].forEach(id => $(id) && fitWatch.observe($(id)));
+fitWatch.observe($('info'));
+document.fonts?.addEventListener('loadingdone', queueFit);
 
 // True Damage: bars up to the playhead glow magenta to cyan, the rest stay
 // dim, over a red-to-gold progress line with a round marker.
