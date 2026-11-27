@@ -728,9 +728,23 @@
   body.no-card.glass:not(.keep-shadow):not(.compact) #art-wrap { box-shadow: 0 0 0 .5px rgba(255,255,255,.35); }
   body.no-card.iracing:not(.keep-shadow):not(.compact) #art-wrap { box-shadow: 0 0 0 1px rgba(255,255,255,.18); }
   body.no-card.vinyl:not(.truedamage):not(.keep-shadow) #vinyl { box-shadow: none; }
-  body.no-card #title, body.no-card #artist, body.no-card #label, body.no-card #progress {
-    text-shadow: 0 1px 3px rgba(0,0,0,.8), 0 0 12px rgba(0,0,0,.5);
+  /* Compact pills with their own panel (WoW, Rocket League) drop it as well */
+  body.no-card.compact.wow #card, body.no-card.compact.rocket #card { background: transparent; box-shadow: none; }
+  /* the navy ring around the Rocket pill cover only blends in on the pill */
+  body.no-card.compact.rocket #art-wrap img { box-shadow: none; }
+  /* the tonearm's dark shadow fell on the stream past the record; shadow=1 keeps it */
+  body.no-card:not(.keep-shadow) #tonearm { filter: none; }
+  /* Dark text shadows looked like grey smudges (and cut-off boxes) around the text without the card.
+     Off by default in every theme; coloured theme glows (retro, True Damage) stay. textShadow=1 brings
+     back a soft dark shadow for light stream backgrounds. A filter instead of text-shadow, because
+     text-shadow is cut off at the edge of the clipped title line. */
+  body.no-card #title, body.no-card #artist, body.no-card #label, body.no-card #progress { text-shadow: none; }
+  body.no-card.retro #title { text-shadow: 0 0 6px var(--accent); }
+  body.no-card.truedamage #title { text-shadow: -1px 0 rgba(255,43,214,.6), 1px 0 rgba(43,240,255,.6); }
+  body.no-card.text-shadow #title, body.no-card.text-shadow #artist, body.no-card.text-shadow #label, body.no-card.text-shadow #progress {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.75)) drop-shadow(0 0 6px rgba(0,0,0,.35));
   }
+  body.no-card.text-shadow.rocket #progress { filter: drop-shadow(0 0 3px rgba(255,140,0,.55)) drop-shadow(0 1px 2px rgba(0,0,0,.75)); }
 </style>
 </head>
 <body>
@@ -781,6 +795,7 @@ const opt = {
   hidePaused: q.get('hidePaused') === '1',
   card: q.get('card') !== '0',        // card=0: no background, just content
   shadow: q.get('shadow') === '1',    // with card=0: keep the soft shadow under the cover
+  textShadow: q.get('textShadow') === '1', // with card=0: soft dark shadow behind the text, for light backgrounds
   progress: q.get('progress') !== '0',
   scale: Math.min(3, Math.max(.3, +q.get('scale') || 1)), // overall size, 1 = default
   width: +q.get('width') || 0,         // card width in px: compact pill (default 460) or big card (default 560, FACEIT 420)
@@ -805,6 +820,7 @@ const BRAND = { lol: ['#c8aa6e', '#0ac8b9'], cs: ['#e8c269', '#8db4e2'], faceit:
 document.body.classList.toggle('hide-paused', opt.hidePaused);
 document.body.classList.toggle('no-card', !opt.card);
 document.body.classList.toggle('keep-shadow', opt.shadow);
+document.body.classList.toggle('text-shadow', opt.textShadow);
 document.body.classList.toggle('no-progress', !opt.progress);
 if (opt.scale !== 1) { document.body.style.transformOrigin = '0 0'; document.body.style.transform = `scale(${opt.scale})`; }
 if (opt.width) document.body.style.setProperty(opt.compact ? '--cw' : '--bw', Math.max(opt.compact ? 240 : 360, opt.width) + 'px');
