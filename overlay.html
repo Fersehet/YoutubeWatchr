@@ -730,7 +730,10 @@
   body.no-card.vinyl:not(.truedamage):not(.keep-shadow) #vinyl { box-shadow: none; }
   /* Compact pills with their own panel (WoW, Rocket League) drop it as well */
   body.no-card.compact.wow #card, body.no-card.compact.rocket #card { background: transparent; box-shadow: none; }
-  body.no-card.compact.wow #card::before { display: none; }
+  /* the navy ring around the Rocket pill cover only blends in on the pill */
+  body.no-card.compact.rocket #art-wrap img { box-shadow: none; }
+  /* the tonearm's dark shadow fell on the stream past the record; shadow=1 keeps it */
+  body.no-card:not(.keep-shadow) #tonearm { filter: none; }
   /* Dark text shadows looked like grey smudges (and cut-off boxes) around the text without the card.
      Off by default in every theme; coloured theme glows (retro, True Damage) stay. textShadow=1 brings
      back a soft dark shadow for light stream backgrounds. A filter instead of text-shadow, because
