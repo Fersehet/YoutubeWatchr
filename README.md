@@ -149,6 +149,7 @@ The editor writes these for you. If you prefer, add them to the OBS URL yourself
 | `scale` | `?scale=1.5` | Make everything bigger or smaller (0.3 to 3). Multiply the OBS width and height by the same number |
 | `card` | `?card=0` | No background and no shadow, just the content. Frames around the cover stay |
 | `shadow` | `?card=0&shadow=1` | Keep the soft shadow under the cover when the card is off |
+| `textShadow` | `?card=0&textShadow=1` | Soft dark shadow behind the text when the card is off. Helps on light backgrounds |
 | `still` | `?still=1` | No animations: no equalizer, no scrolling text, no spinning record |
 
 **Colors and text**
